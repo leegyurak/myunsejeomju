@@ -1,0 +1,120 @@
+Watching for file changes with StatReloader
+[29/Jul/2025 23:22:10] "GET /api/orders/5b6d61dd-7877-4c2f-9428-433708a78064/payment-status/ HTTP/1.1" 200 167
+[29/Jul/2025 23:22:24] "GET /api/orders/5b6d61dd-7877-4c2f-9428-433708a78064/payment-status/ HTTP/1.1" 200 167
+/Users/leegyurak/개발/숭실대축제/backend/presentation/api/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+July 29, 2025 - 23:22:02
+Django version 5.2.4, using settings 'festival_backend.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+/Users/leegyurak/개발/숭실대축제/backend/presentation/api/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+July 29, 2025 - 23:22:37
+Django version 5.2.4, using settings 'festival_backend.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+[29/Jul/2025 23:22:49] "GET /api/orders/5b6d61dd-7877-4c2f-9428-433708a78064/payment-status/ HTTP/1.1" 200 167
+[29/Jul/2025 23:23:05] "GET /api/orders/5b6d61dd-7877-4c2f-9428-433708a78064/payment-status/ HTTP/1.1" 200 167
+[29/Jul/2025 23:25:01] "GET /api/orders/5b6d61dd-7877-4c2f-9428-433708a78064/payment-status/ HTTP/1.1" 200 167
+/Users/leegyurak/개발/숭실대축제/backend/presentation/api/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+July 29, 2025 - 23:22:46
+Django version 5.2.4, using settings 'festival_backend.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+DEBUG: is_completed=True, discord_notified=True
+DEBUG: is_completed=True, discord_notified=False
+DEBUG: Sending Discord notification for order 5b6d61dd-7877-4c2f-9428-433708a78064
+DEBUG: Prepared order_items: []
+DEBUG: Discord notification success = True
+DEBUG: Update discord_notified status result = True
+DEBUG: is_completed=True, discord_notified=True
+Watching for file changes with StatReloader
+/Users/leegyurak/개발/숭실대축제/backend/presentation/api/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+July 29, 2025 - 23:25:10
+Django version 5.2.4, using settings 'festival_backend.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+[29/Jul/2025 23:25:55] "GET /api/orders/5b6d61dd-7877-4c2f-9428-433708a78064/payment-status/ HTTP/1.1" 200 167
+[29/Jul/2025 23:26:09] "GET /api/orders/5b6d61dd-7877-4c2f-9428-433708a78064/payment-status/ HTTP/1.1" 200 167
+[29/Jul/2025 23:26:42] "GET /api/tables/ HTTP/1.1" 200 2336
+[29/Jul/2025 23:26:46] "GET /api/foods/ HTTP/1.1" 200 2628
+/Users/leegyurak/개발/숭실대축제/backend/venv/lib/python3.13/site-packages/django/db/models/fields/__init__.py:1671: RuntimeWarning: DateTimeField OrderModel.order_date received a naive datetime (2025-07-29 23:26:54.169658) while time zone support is active.
+  warnings.warn(
+[29/Jul/2025 23:26:54] "POST /api/orders/ HTTP/1.1" 201 816
+[29/Jul/2025 23:26:59] "GET /api/orders/84cf2eea-3dbc-42bd-af2c-355984117325/payment-status/ HTTP/1.1" 200 151
+/Users/leegyurak/개발/숭실대축제/backend/presentation/api/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+July 29, 2025 - 23:25:45
+Django version 5.2.4, using settings 'festival_backend.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+DEBUG: Starting check_payment_status for order_id: 5b6d61dd-7877-4c2f-9428-433708a78064
+DEBUG: is_completed=True, discord_notified=False
+DEBUG: Sending Discord notification for order 5b6d61dd-7877-4c2f-9428-433708a78064
+DEBUG: order.items = []
+DEBUG: Prepared order_items: []
+DEBUG: Discord notification success = True
+DEBUG: Update discord_notified status result = True
+DEBUG: Starting check_payment_status for order_id: 5b6d61dd-7877-4c2f-9428-433708a78064
+DEBUG: is_completed=True, discord_notified=False
+DEBUG: Sending Discord notification for order 5b6d61dd-7877-4c2f-9428-433708a78064
+DEBUG: order.items = []
+DEBUG: Prepared order_items: []
+DEBUG: Discord notification success = True
+DEBUG: Update discord_notified status result = True
+DEBUG: Starting check_payment_status for order_id: 84cf2eea-3dbc-42bd-af2c-355984117325
+DEBUG: is_completed=True, discord_notified=False
+DEBUG: Sending Discord notification for order 84cf2eea-3dbc-42bd-af2c-355984117325
+DEBUG: order.items = [OrderItem(food=Food(id=13, name='김치찌개', price=8000, category=<FoodCategory.MENU: 'menu'>, description='얼큰한 김치찌개', image='https://images.unsplash.com/photo-1582719471127-6d4f84c4e93c?w=300&h=300&fit=crop', sold_out=False), quantity=2, price=8000), OrderItem(food=Food(id=19, name='소주', price=4000, category=<FoodCategory.DRINKS: 'drinks'>, description='참이슬 소주', image='https://images.unsplash.com/photo-1544145945-f90425340c7e?w=300&h=300&fit=crop', sold_out=False), quantity=1, price=4000)]
+DEBUG: Processing item: OrderItem(food=Food(id=13, name='김치찌개', price=8000, category=<FoodCategory.MENU: 'menu'>, description='얼큰한 김치찌개', image='https://images.unsplash.com/photo-1582719471127-6d4f84c4e93c?w=300&h=300&fit=crop', sold_out=False), quantity=2, price=8000)
+DEBUG: Processing item: OrderItem(food=Food(id=19, name='소주', price=4000, category=<FoodCategory.DRINKS: 'drinks'>, description='참이슬 소주', image='https://images.unsplash.com/photo-1544145945-f90425340c7e?w=300&h=300&fit=crop', sold_out=False), quantity=1, price=4000)
+DEBUG: Prepared order_items: [{'name': '김치찌개', 'quantity': 2, 'price': 16000}, {'name': '소주', 'quantity': 1, 'price': 4000}]
+DEBUG: Discord notification success = True
+DEBUG: Update discord_notified status result = True
+Watching for file changes with StatReloader
+[29/Jul/2025 23:27:22] "GET /api/orders/84cf2eea-3dbc-42bd-af2c-355984117325/payment-status/ HTTP/1.1" 200 151
+/Users/leegyurak/개발/숭실대축제/backend/presentation/api/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+July 29, 2025 - 23:27:18
+Django version 5.2.4, using settings 'festival_backend.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+DEBUG: Starting check_payment_status for order_id: 84cf2eea-3dbc-42bd-af2c-355984117325
+DEBUG: Found order: Order(id='84cf2eea-3dbc-42bd-af2c-355984117325', table=Table(id='de086f57-07db-42eb-8df3-9bb10e472bd7', name='1번 테이블', created_at=datetime.datetime(2025, 7, 29, 13, 42, 53, 320873, tzinfo=datetime.timezone.utc), updated_at=datetime.datetime(2025, 7, 29, 13, 42, 53, 320887, tzinfo=datetime.timezone.utc)), order_date=datetime.datetime(2025, 7, 29, 14, 26, 54, 169658, tzinfo=datetime.timezone.utc), items=[OrderItem(food=Food(id=13, name='김치찌개', price=8000, category=<FoodCategory.MENU: 'menu'>, description='얼큰한 김치찌개', image='https://images.unsplash.com/photo-1582719471127-6d4f84c4e93c?w=300&h=300&fit=crop', sold_out=False), quantity=2, price=8000), OrderItem(food=Food(id=19, name='소주', price=4000, category=<FoodCategory.DRINKS: 'drinks'>, description='참이슬 소주', image='https://images.unsplash.com/photo-1544145945-f90425340c7e?w=300&h=300&fit=crop', sold_out=False), quantity=1, price=4000)], payer_name=None, status='completed', minus_items=None, pre_order_amount=None, is_visible=True, discord_notified=True)
+DEBUG: is_completed=True, discord_notified=True
+Watching for file changes with StatReloader
