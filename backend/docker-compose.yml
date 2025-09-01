@@ -4,10 +4,10 @@ services:
   db:
     image: mysql:8.0
     environment:
-      MYSQL_DATABASE: festival_db
+      MYSQL_DATABASE: myunsejeomju_db
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_USER: festival_user
-      MYSQL_PASSWORD: festival_password
+      MYSQL_USER: myunsejeomju_user
+      MYSQL_PASSWORD: myunsejeomju_password
     ports:
       - "3306:3306"
     volumes:
@@ -17,7 +17,7 @@ services:
       timeout: 20s
       retries: 10
     networks:
-      - festival_network
+      - myunsejeomju_network
 
   web:
     build: .
@@ -27,9 +27,9 @@ services:
       - SECRET_KEY=django-insecure-docker-secret-key-change-in-production
       - DEBUG=True
       - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
-      - DB_NAME=festival_db
-      - DB_USER=festival_user
-      - DB_PASSWORD=festival_password
+      - DB_NAME=myunsejeomju_db
+      - DB_USER=myunsejeomju_user
+      - DB_PASSWORD=myunsejeomju_password
       - DB_HOST=db
       - DB_PORT=3306
     depends_on:
@@ -38,14 +38,14 @@ services:
     volumes:
       - .:/app
     networks:
-      - festival_network
+      - myunsejeomju_network
     command: >
       sh -c "uv run python manage.py migrate &&
-             uv run gunicorn --config gunicorn.conf.py festival_backend.wsgi:application"
+             uv run gunicorn --config gunicorn.conf.py myunsejeomju.wsgi:application"
 
 volumes:
   mysql_data:
 
 networks:
-  festival_network:
+  myunsejeomju_network:
     driver: bridge

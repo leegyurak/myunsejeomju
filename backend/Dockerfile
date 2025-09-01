@@ -32,4 +32,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/api/ || exit 1
 
 # 애플리케이션 실행
-CMD ["uv", "run", "gunicorn", "--config", "gunicorn.conf.py", "festival_backend.wsgi:application"]
+CMD ["uv", "run", "gunicorn", "--config", "gunicorn.conf.py", "myunsejeomju.wsgi:application"]

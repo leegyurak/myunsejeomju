@@ -1,6 +1,6 @@
-# Festival Backend
+# Myunsejeomju Backend
 
-Django + DRF + Clean Architecture를 사용한 축제 음식 주문 시스템 백엔드 (테이블 단위 주문)
+Django + DRF + Clean Architecture를 사용한 뮨세점주 음식 주문 시스템 백엔드 (테이블 단위 주문)
 
 ## 프로젝트 구조
 
@@ -16,7 +16,7 @@ backend/
 ├── presentation/         # 프레젠테이션 레이어
 │   ├── api/             # API 뷰
 │   └── serializers/     # DRF 시리얼라이저
-└── festival_backend/    # Django 설정
+└── myunsejeomju/    # Django 설정
 ```
 
 ## 주요 기능
