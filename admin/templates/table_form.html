@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if table %}테이블 수정{% else %}테이블 추가{% endif %} - 면세점주 관리자
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-table me-2"></i>
+                    {% if table %}테이블 수정{% else %}테이블 추가{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">테이블 이름</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="{% if table %}{{ table.name }}{% endif %}"
+                               placeholder="예: A-1, 창가 테이블, VIP룸">
+                        <div class="form-text">고객이 식별할 수 있는 테이블 이름을 입력하세요.</div>
+                    </div>
+                    
+                    {% if table %}
+                        <div class="mb-3">
+                            <label class="form-label">테이블 정보</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small class="text-muted">테이블 ID: <code>{{ table.id }}</code></small>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">생성일: {{ table.created_at|date:"Y-m-d H:i" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'admin_app:table_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>취소
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>
+                            {% if table %}수정{% else %}추가{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

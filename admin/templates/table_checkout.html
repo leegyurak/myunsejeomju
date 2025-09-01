@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ table.name }} 퇴실 처리 - 면세점주 관리자{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-sign-out-alt me-2"></i>테이블 퇴실 처리
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-table fa-4x text-warning mb-3"></i>
+                    <h4>{{ table.name|default:table.id }} 테이블을 퇴실 처리하시겠습니까?</h4>
+                    
+                    <div class="alert alert-info mt-4">
+                        <div class="row text-center">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">활성 주문 수</h6>
+                                <h3 class="text-primary">{{ active_orders_count }}건</h3>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">총 결제 금액</h6>
+                                <h3 class="text-success">₩{{ total_amount|floatformat:0 }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>주의:</strong> 퇴실 처리하면 이 테이블의 모든 활성 주문이 비활성화됩니다. 
+                        이 작업은 되돌릴 수 없습니다.
+                    </div>
+                </div>
+                
+                {% if active_orders_count > 0 %}
+                    <form method="post" class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        {% csrf_token %}
+                        <a href="{% url 'admin_app:table_orders' table.pk %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-list me-1"></i>주문 내역 확인
+                        </a>
+                        <a href="{% url 'admin_app:table_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>취소
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-sign-out-alt me-1"></i>퇴실 처리
+                        </button>
+                    </form>
+                {% else %}
+                    <div class="text-center">
+                        <p class="text-muted">이 테이블에는 처리할 활성 주문이 없습니다.</p>
+                        <a href="{% url 'admin_app:table_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>테이블 목록으로
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if food %}음식 수정{% else %}음식 추가{% endif %} - 면세점주 관리자
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-utensils me-2"></i>
+        {% if food %}음식 수정{% else %}음식 추가{% endif %}
+    </h1>
+    <a href="{% url 'admin_app:food_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>목록으로
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" id="foodForm">
+                    {% csrf_token %}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="name" class="form-label">음식명 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{% if food %}{{ food.name }}{% endif %}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="price" class="form-label">가격 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">₩</span>
+                                <input type="number" class="form-control" id="price" name="price" 
+                                       value="{% if food %}{{ food.price }}{% endif %}" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="category" class="form-label">카테고리 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">카테고리를 선택하세요</option>
+                                {% for value, display in categories %}
+                                    <option value="{{ value }}" 
+                                            {% if food and food.category == value %}selected{% endif %}>
+                                        {{ display }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% if food %}
+                            <div class="col-md-6">
+                                <label class="form-label">상태</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="sold_out" name="sold_out"
+                                           {% if food.sold_out %}checked{% endif %}>
+                                    <label class="form-check-label" for="sold_out">
+                                        품절 상태
+                                    </label>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="image" class="form-label">이미지 URL</label>
+                        <input type="url" class="form-control" id="image" name="image" 
+                               value="{% if food %}{{ food.image|default:'' }}{% endif %}"
+                               placeholder="https://example.com/image.jpg">
+                        <div class="form-text">이미지 URL을 입력하면 미리보기가 표시됩니다.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">설명</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"
+                                  placeholder="음식에 대한 설명을 입력하세요">{% if food %}{{ food.description|default:'' }}{% endif %}</textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'admin_app:food_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>취소
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>
+                            {% if food %}수정{% else %}추가{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-eye me-1"></i>미리보기</h6>
+            </div>
+            <div class="card-body">
+                <div id="preview-card" class="card">
+                    <div id="preview-image" class="card-img-top" style="height: 200px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-image text-muted fa-3x"></i>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-title" id="preview-name">음식명</h6>
+                        <p class="card-text">
+                            <span class="badge bg-secondary" id="preview-category">카테고리</span>
+                        </p>
+                        <p class="card-text" id="preview-description">설명이 여기에 표시됩니다.</p>
+                        <p class="card-text">
+                            <strong id="preview-price">₩0</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info-circle me-1"></i>도움말</h6>
+            </div>
+            <div class="card-body">
+                <small class="text-muted">
+                    <ul class="ps-3">
+                        <li><strong>음식명:</strong> 고객에게 표시될 메뉴명</li>
+                        <li><strong>가격:</strong> 원 단위로 입력</li>
+                        <li><strong>카테고리:</strong> 메뉴 또는 음료 선택</li>
+                        <li><strong>이미지:</strong> 온라인 이미지 URL 입력</li>
+                        <li><strong>설명:</strong> 음식에 대한 자세한 정보</li>
+                    </ul>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('foodForm');
+    const nameInput = document.getElementById('name');
+    const priceInput = document.getElementById('price');
+    const categorySelect = document.getElementById('category');
+    const imageInput = document.getElementById('image');
+    const descriptionInput = document.getElementById('description');
+    
+    // 미리보기 업데이트 함수
+    function updatePreview() {
+        const name = nameInput.value || '음식명';
+        const price = priceInput.value || '0';
+        const category = categorySelect.options[categorySelect.selectedIndex]?.text || '카테고리';
+        const image = imageInput.value;
+        const description = descriptionInput.value || '설명이 여기에 표시됩니다.';
+        
+        document.getElementById('preview-name').textContent = name;
+        document.getElementById('preview-price').textContent = `₩${parseInt(price).toLocaleString()}`;
+        document.getElementById('preview-category').textContent = category;
+        document.getElementById('preview-description').textContent = description;
+        
+        const previewImage = document.getElementById('preview-image');
+        if (image) {
+            previewImage.innerHTML = `<img src="${image}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="${name}">`;
+        } else {
+            previewImage.innerHTML = '<i class="fas fa-image text-muted fa-3x"></i>';
+        }
+    }
+    
+    // 입력 이벤트 리스너 추가
+    [nameInput, priceInput, categorySelect, imageInput, descriptionInput].forEach(input => {
+        input.addEventListener('input', updatePreview);
+        input.addEventListener('change', updatePreview);
+    });
+    
+    // 초기 미리보기 업데이트
+    updatePreview();
+    
+    // 폼 유효성 검사
+    form.addEventListener('submit', function(e) {
+        if (!nameInput.value.trim()) {
+            e.preventDefault();
+            alert('음식명을 입력해주세요.');
+            nameInput.focus();
+            return;
+        }
+        
+        if (!priceInput.value || parseInt(priceInput.value) < 0) {
+            e.preventDefault();
+            alert('올바른 가격을 입력해주세요.');
+            priceInput.focus();
+            return;
+        }
+        
+        if (!categorySelect.value) {
+            e.preventDefault();
+            alert('카테고리를 선택해주세요.');
+            categorySelect.focus();
+            return;
+        }
+    });
+});
+</script>
+{% endblock %}

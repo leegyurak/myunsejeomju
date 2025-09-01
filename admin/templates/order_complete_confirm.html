@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}주문 완료 처리 - 면세점주 관리자{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-check me-2"></i>선주문 완료 처리
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                    <h4>이 선주문을 완료 처리하시겠습니까?</h4>
+                    
+                    <div class="alert alert-info mt-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">주문번호</h6>
+                                <p class="mb-0"><code>{{ order.id|stringformat:"s"|slice:":8" }}...</code></p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">테이블</h6>
+                                <p class="mb-0">{{ table.name|default:table.id|stringformat:"s"|slice:":8" }}</p>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">결제자</h6>
+                                <p class="mb-0">{{ order.payer_name|default:"미입력" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">선주문 금액</h6>
+                                <p class="mb-0"><strong>₩{{ order.pre_order_amount|floatformat:0 }}</strong></p>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">현재 상태</h6>
+                                <p class="mb-0">
+                                    <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">주문 일시</h6>
+                                <p class="mb-0">{{ order.order_date|date:"Y-m-d H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if order.status == 'pre_order' %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>처리 후:</strong> 이 주문은 <strong>"완료"</strong> 상태로 변경되며, 
+                            대시보드의 최근 주문 목록에 표시됩니다.
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>주의:</strong> 이 주문은 이미 완료된 주문이거나 선주문이 아닙니다.
+                        </div>
+                    {% endif %}
+                </div>
+                
+                {% if order.status == 'pre_order' %}
+                    <form method="post" class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        {% csrf_token %}
+                        <a href="{{ return_url }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>취소
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check me-1"></i>완료 처리
+                        </button>
+                    </form>
+                {% else %}
+                    <div class="text-center">
+                        <a href="{{ return_url }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>돌아가기
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

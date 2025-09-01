@@ -1,0 +1,24 @@
+[project]
+name = "myunsejeomju-admin"
+version = "0.1.0"
+description = "면세점주 관리자 패널"
+requires-python = ">=3.10"
+dependencies = [
+    "Django>=5.0.0",
+    "python-dotenv>=1.0.0",
+    "PyMySQL>=1.1.0",
+    "gunicorn>=21.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "django-debug-toolbar>=4.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["admin_app*", "myunsejeomju*"]

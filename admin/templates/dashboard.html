@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}대시보드 - 면세점주 관리자{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-tachometer-alt me-2"></i>대시보드</h1>
+    <button class="btn btn-outline-primary" onclick="refreshStats()">
+        <i class="fas fa-sync-alt me-1"></i>새로고침
+    </button>
+</div>
+
+<!-- 통계 카드 -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_orders }}</h4>
+                        <p class="card-text">총 주문 수</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-shopping-cart fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ today_orders }}</h4>
+                        <p class="card-text">오늘 주문 수</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar-day fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">₩{{ total_revenue|floatformat:0 }}</h4>
+                        <p class="card-text">총 매출</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-won-sign fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ sold_out_foods }}</h4>
+                        <p class="card-text">품절 메뉴</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-pause-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- 최근 주문 -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-clock me-2"></i>최근 주문</h5>
+                <a href="{% url 'admin_app:table_list' %}" class="btn btn-sm btn-outline-primary">테이블 관리</a>
+            </div>
+            <div class="card-body">
+                {% if recent_orders %}
+                    <div class="list-group list-group-flush">
+                        {% for order in recent_orders %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center {% if not order.is_visible %}bg-light{% endif %}">
+                                <div>
+                                    <strong>{{ order.table.name|default:order.table.id|stringformat:"s"|slice:":8" }}</strong>
+                                    {% if order.payer_name %}
+                                        - {{ order.payer_name }}
+                                    {% endif %}
+                                    {% if not order.is_visible %}
+                                        <span class="badge bg-secondary ms-2">퇴실처리됨</span>
+                                    {% endif %}
+                                    <br>
+                                    <small class="text-muted">{{ order.order_date|date:"Y-m-d H:i" }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-{% if order.status == 'completed' %}success{% else %}warning{% endif %}">
+                                        {{ order.get_status_display }}
+                                    </span>
+                                    {% if not order.is_visible %}
+                                        <span class="badge bg-secondary">비활성</span>
+                                    {% endif %}
+                                    <br>
+                                    <strong class="{% if not order.is_visible %}text-muted{% endif %}">₩{{ order.total_amount|floatformat:0 }}</strong>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">최근 주문이 없습니다.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- 인기 메뉴 -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-star me-2"></i>인기 메뉴</h5>
+                <a href="{% url 'admin_app:food_list' %}" class="btn btn-sm btn-outline-primary">전체 보기</a>
+            </div>
+            <div class="card-body">
+                {% if popular_foods %}
+                    <div class="list-group list-group-flush">
+                        {% for food in popular_foods %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ food.name }}</strong>
+                                    <span class="badge bg-secondary ms-2">{{ food.get_category_display }}</span>
+                                    {% if food.sold_out %}
+                                        <span class="badge bg-danger ms-1">품절</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-end">
+                                    <span class="text-muted">주문 {{ food.order_count }}회</span>
+                                    <br>
+                                    <strong>₩{{ food.price|floatformat:0 }}</strong>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">메뉴 데이터가 없습니다.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function refreshStats() {
+    fetch('{% url "admin_app:api_stats" %}')
+        .then(response => response.json())
+        .then(data => {
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error refreshing stats:', error);
+        });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}주문 삭제 확인 - 면세점주 관리자{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>주문 완전 삭제 확인
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-trash-alt fa-4x text-danger mb-3"></i>
+                    <h4>정말로 이 주문을 완전히 삭제하시겠습니까?</h4>
+                    
+                    <div class="alert alert-info mt-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">주문번호</h6>
+                                <p class="mb-0"><code>{{ order.id|stringformat:"s"|slice:":8" }}...</code></p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">테이블</h6>
+                                <p class="mb-0">{{ table.name|default:table.id|stringformat:"s"|slice:":8" }}</p>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">결제자</h6>
+                                <p class="mb-0">{{ order.payer_name|default:"미입력" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">주문 금액</h6>
+                                <p class="mb-0"><strong>₩{{ order.total_amount|floatformat:0 }}</strong></p>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">주문 상태</h6>
+                                <p class="mb-0">
+                                    <span class="badge bg-{% if order.status == 'completed' %}success{% elif order.status == 'pre_order' %}warning{% else %}secondary{% endif %}">
+                                        {{ order.get_status_display }}
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">주문 일시</h6>
+                                <p class="mb-0">{{ order.order_date|date:"Y-m-d H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 주문 내용 표시 -->
+                    {% if order.items.exists %}
+                        <div class="alert alert-light">
+                            <h6>주문 내용</h6>
+                            <ul class="list-unstyled mb-0">
+                                {% for item in order.items.all %}
+                                    <li class="d-flex justify-content-between">
+                                        <span>{{ item.food.name }} x{{ item.quantity }}</span>
+                                        <strong>₩{{ item.total_price|floatformat:0 }}</strong>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>경고:</strong> 이 작업은 되돌릴 수 없습니다. 
+                        주문과 관련된 모든 정보(주문 아이템, 차감 아이템 등)가 데이터베이스에서 완전히 삭제됩니다.
+                    </div>
+                </div>
+                
+                <form method="post" class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    {% csrf_token %}
+                    <a href="{{ return_url }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>취소
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>완전 삭제
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

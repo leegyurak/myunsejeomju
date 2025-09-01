@@ -1,0 +1,48 @@
+# 개발 환경용 오버라이드 설정
+# docker-compose up 실행 시 자동으로 적용됩니다.
+
+version: '3.8'
+
+services:
+  # 개발 환경에서는 Django 개발 서버 사용
+  web:
+    build:
+      context: .
+      target: development  # 멀티스테이지 빌드 시 development 스테이지 사용
+    environment:
+      - DEBUG=True
+      - DJANGO_SETTINGS_MODULE=myunsejeomju.settings
+    volumes:
+      # 코드 변경 시 자동 반영을 위한 볼륨 마운트
+      - .:/app
+      - /app/.venv  # .venv 디렉토리는 제외
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+
+  # 개발 환경에서는 MySQL을 더 가벼운 설정으로
+  db:
+    environment:
+      MYSQL_DATABASE: myunsejeomju_admin_dev
+      MYSQL_USER: dev_user
+      MYSQL_PASSWORD: dev_password
+      MYSQL_ROOT_PASSWORD: dev_root_password
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  # 개발 환경에서 phpMyAdmin 추가 (선택사항)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: myunsejeomju_admin_phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: dev_user
+      PMA_PASSWORD: dev_password
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    networks:
+      - admin_network
+    profiles:
+      - debug

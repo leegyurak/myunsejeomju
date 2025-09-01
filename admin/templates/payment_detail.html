@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}입금 상세 - 면세점주 관리자{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-credit-card me-2"></i>입금 상세</h1>
+    <a href="{% url 'admin_app:payment_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>목록으로
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">입금 정보</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <h6 class="text-muted">입금 ID</h6>
+                        <p class="mb-0"><code>{{ payment.id }}</code></p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">입금자명</h6>
+                        <p class="mb-0"><strong>{{ payment.transaction_name }}</strong></p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">입금액</h6>
+                        <p class="mb-0"><strong class="text-success fs-5">₩{{ payment.amount|floatformat:0 }}</strong></p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">은행 코드</h6>
+                        <p class="mb-0">{{ payment.bank_code }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">계좌번호</h6>
+                        <p class="mb-0">{{ payment.bank_account_number }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <h6 class="text-muted">은행 계좌 ID</h6>
+                        <p class="mb-0"><code>{{ payment.bank_account_id }}</code></p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">거래 일시</h6>
+                        <p class="mb-0">
+                            {{ payment.transaction_date|date:"Y년 m월 d일" }}<br>
+                            <small class="text-muted">{{ payment.transaction_date|date:"H:i:s" }}</small>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">처리 일시</h6>
+                        <p class="mb-0">
+                            {{ payment.processing_date|date:"Y년 m월 d일" }}<br>
+                            <small class="text-muted">{{ payment.processing_date|date:"H:i:s" }}</small>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">거래 후 잔액</h6>
+                        <p class="mb-0"><strong>₩{{ payment.balance|floatformat:0 }}</strong></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">등록일시</h6>
+                        <p class="mb-0">
+                            {{ payment.created_at|date:"Y-m-d H:i:s" }}<br>
+                            <small class="text-muted">{{ payment.created_at|timesince }} 전</small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">요약 정보</h6>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-won-sign fa-3x text-success mb-2"></i>
+                    <h4 class="text-success">₩{{ payment.amount|floatformat:0 }}</h4>
+                    <p class="text-muted mb-0">입금액</p>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-3">
+                    <h6 class="text-muted">입금자</h6>
+                    <p class="mb-0">{{ payment.transaction_name }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="text-muted">거래 일자</h6>
+                    <p class="mb-0">{{ payment.transaction_date|date:"m/d" }}</p>
+                </div>
+                
+                <div>
+                    <h6 class="text-muted">상태</h6>
+                    <span class="badge bg-success fs-6">처리완료</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">계좌 정보</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-2"><strong>은행:</strong> {{ payment.bank_code }}</p>
+                <p class="mb-2"><strong>계좌:</strong> {{ payment.bank_account_number }}</p>
+                <p class="mb-0"><strong>잔액:</strong> ₩{{ payment.balance|floatformat:0 }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
