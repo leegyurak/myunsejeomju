@@ -303,6 +303,133 @@ CORS_ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
 
 ## 테스트
 
+### 자동화된 테스트 실행 (Makefile 사용)
+
+#### 전체 테스트 실행
+```bash
+# 모든 테스트 실행
+make test
+
+# 전체 테스트 스위트 (모든 타입 순차 실행)
+make test-all
+```
+
+#### 테스트 타입별 실행
+```bash
+# 단위 테스트만 실행
+make test-unit
+
+# 통합 테스트만 실행  
+make test-integration
+
+# 동시성 테스트만 실행
+make test-concurrency
+
+# 빠른 테스트만 실행 (slow 마커 제외)
+make test-fast
+
+# 성능 테스트 실행
+make test-performance
+```
+
+#### 특정 레이어별 테스트
+```bash
+# Repository 레이어 테스트
+make test-repo
+
+# Use Case 레이어 테스트
+make test-usecase
+
+# API 엔드포인트 테스트
+make test-api
+```
+
+#### 고급 테스트 옵션
+```bash
+# 코드 커버리지 측정
+make test-coverage
+
+# 병렬 실행으로 속도 향상
+make test-parallel
+
+# 파일 변경 시 자동 테스트 실행
+make test-watch
+```
+
+#### 개발 워크플로우
+```bash
+# 개발 환경 완전 설정 (설치 + 마이그레이션 + 시드 데이터)
+make dev-setup
+
+# 커밋 전 검사 (포맷팅 + 린트 + 빠른 테스트)
+make pre-commit
+
+# CI 파이프라인 (설치 + 테스트 + 린트)
+make ci
+
+# 개발 서버 실행
+make dev
+```
+
+#### 데이터베이스 관리
+```bash
+# 마이그레이션 실행
+make migrate
+
+# 시드 데이터 생성
+make seed
+
+# 데이터베이스 초기화
+make reset-db
+```
+
+#### 코드 품질 관리
+```bash
+# 코드 포맷팅
+make format
+
+# 린트 검사
+make lint
+
+# 타입 검사
+make type-check
+```
+
+#### 사용 가능한 모든 명령어 확인
+```bash
+# 도움말 표시
+make help
+```
+
+### 테스트 구조
+
+```
+tests/
+├── unit/                    # 단위 테스트
+│   ├── test_repositories.py # Repository 레이어 테스트
+│   └── test_use_cases.py   # Use Case 레이어 테스트
+├── integration/            # 통합 테스트
+│   ├── test_concurrency.py # 동시성 제어 테스트
+│   └── test_api_orders.py  # API 엔드포인트 테스트
+└── factories/              # 테스트 데이터 팩토리
+    ├── model_factories.py  # Django 모델 팩토리
+    └── entity_factories.py # 도메인 엔티티 팩토리
+```
+
+### 테스트 마커
+
+- `@pytest.mark.unit`: 단위 테스트 (빠름, 외부 의존성 없음)
+- `@pytest.mark.integration`: 통합 테스트 (DB 사용)
+- `@pytest.mark.concurrency`: 동시성 테스트 (멀티스레드)
+- `@pytest.mark.slow`: 시간이 오래 걸리는 테스트
+- `@pytest.mark.database`: 데이터베이스가 필요한 테스트
+
+### 동시성 테스트 중점 사항
+
+1. **품절 상품 동시 주문 방지**: 여러 사용자가 동시에 품절된 음식을 주문할 때 모든 요청이 적절히 거부되는지 확인
+2. **Race Condition 방지**: SELECT FOR UPDATE를 통한 데이터베이스 락이 올바르게 작동하는지 검증
+3. **트랜잭션 격리**: 트랜잭션 경계에서 데이터 일관성이 유지되는지 확인
+
 ### API 수동 테스트
 ```bash
 # 전체 음식 조회

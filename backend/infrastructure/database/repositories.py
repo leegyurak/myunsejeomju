@@ -26,6 +26,14 @@ class DjangoFoodRepository(FoodRepository):
         foods = FoodModel.objects.filter(category=category.value)
         return [self._model_to_entity(food) for food in foods]
     
+    def get_by_ids_for_update(self, food_ids: List[int]) -> List[Food]:
+        """
+        주문 생성 시 동시성 이슈 방지를 위해 select_for_update로 음식들을 조회합니다.
+        트랜잭션 내에서만 호출되어야 합니다.
+        """
+        foods = FoodModel.objects.select_for_update().filter(id__in=food_ids)
+        return [self._model_to_entity(food) for food in foods]
+    
     def create(self, food: Food) -> Food:
         food_model = FoodModel(
             name=food.name,
@@ -161,6 +169,69 @@ class DjangoOrderRepository(OrderRepository):
                     )
                 except FoodModel.DoesNotExist:
                     raise ValueError(f"Food with id {minus_item.food.id} not found")
+        
+        return order
+    
+    def create_with_stock_validation(self, order: Order) -> Order:
+        """재고 검증과 함께 주문을 생성합니다. (트랜잭션 내에서 호출되어야 함)"""
+        # Get table model
+        table_model = TableModel.objects.get(id=order.table.id)
+        
+        # 주문할 음식들의 ID 수집
+        food_ids = [item.food.id for item in order.items]
+        if order.minus_items:
+            food_ids.extend([minus_item.food.id for minus_item in order.minus_items])
+        
+        # select_for_update로 음식들을 락하고 조회 (동시성 제어)
+        food_models = FoodModel.objects.select_for_update().filter(id__in=food_ids)
+        food_dict = {food.id: food for food in food_models}
+        
+        # 품절된 음식 체크
+        sold_out_foods = []
+        for item in order.items:
+            food_model = food_dict.get(item.food.id)
+            if not food_model:
+                raise ValueError(f"Food with id {item.food.id} not found")
+            if food_model.sold_out:
+                sold_out_foods.append(food_model.name)
+        
+        # 품절된 음식이 있으면 예외 발생
+        if sold_out_foods:
+            raise ValueError(f"다음 음식들이 품절되었습니다: {', '.join(sold_out_foods)}")
+        
+        # 주문 생성 (기존 create 로직 재사용)
+        order_model = OrderModel(
+            id=order.id,
+            table=table_model,
+            payer_name=order.payer_name,
+            status=order.status,
+            pre_order_amount=order.pre_order_amount,
+            order_date=order.order_date,
+            is_visible=order.is_visible
+        )
+        order_model.save()
+        
+        # Create order items
+        for item in order.items:
+            food_model = food_dict[item.food.id]
+            OrderItemModel.objects.create(
+                order=order_model,
+                food=food_model,
+                quantity=item.quantity,
+                price=item.price
+            )
+        
+        # Create minus order items if they exist
+        if order.minus_items:
+            for minus_item in order.minus_items:
+                food_model = food_dict[minus_item.food.id]
+                MinusOrderItemModel.objects.create(
+                    order=order_model,
+                    food=food_model,
+                    quantity=minus_item.quantity,
+                    price=minus_item.price,
+                    reason=minus_item.reason
+                )
         
         return order
     

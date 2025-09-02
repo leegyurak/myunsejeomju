@@ -3,50 +3,65 @@ from datetime import datetime
 import uuid
 
 from ..entities.order import Order, OrderItem
-from ..entities.food import Food
-from ..entities.table import Table
 from ..repositories.order_repository import OrderRepository
 from ..repositories.food_repository import FoodRepository
 from ..repositories.table_repository import TableRepository
+from ..services.order_service import TransactionManager
 
 
 class CreateOrderUseCase:
-    def __init__(self, order_repository: OrderRepository, food_repository: FoodRepository, table_repository: TableRepository):
+    def __init__(self, order_repository: OrderRepository, food_repository: FoodRepository, 
+                 table_repository: TableRepository, transaction_manager: TransactionManager):
         self.order_repository = order_repository
         self.food_repository = food_repository
         self.table_repository = table_repository
-    
+        self.transaction_manager = transaction_manager
+
     def execute(self, table_id: str, items_data: List[dict]) -> Order:
         # Validate table exists
         table = self.table_repository.get_by_id(table_id)
         if not table:
             raise ValueError(f"Table with id {table_id} not found")
         
-        order_items = []
-        
-        for item_data in items_data:
-            food = self.food_repository.get_by_id(item_data['food_id'])
-            if not food:
-                raise ValueError(f"Food with id {item_data['food_id']} not found")
+        # 트랜잭션 내에서 실행할 함수 정의
+        def create_order_with_validation():
+            order_items = []
             
-            if food.sold_out:
-                raise ValueError(f"Food {food.name} is sold out")
+            # 주문할 음식 ID들 수집
+            food_ids = [item_data['food_id'] for item_data in items_data]
             
-            order_item = OrderItem(
-                food=food,
-                quantity=item_data['quantity'],
-                price=food.price
+            # select_for_update로 음식들을 조회 (동시성 제어)
+            foods = self.food_repository.get_by_ids_for_update(food_ids)
+            food_dict = {food.id: food for food in foods}
+            
+            # 품절 체크 및 주문 아이템 생성
+            for item_data in items_data:
+                food = food_dict.get(item_data['food_id'])
+                if not food:
+                    raise ValueError(f"Food with id {item_data['food_id']} not found")
+                
+                if food.sold_out:
+                    raise ValueError(f"음식 '{food.name}'이(가) 품절되었습니다")
+                
+                order_item = OrderItem(
+                    food=food,
+                    quantity=item_data['quantity'],
+                    price=food.price
+                )
+                order_items.append(order_item)
+            
+            # 주문 생성
+            order = Order(
+                id=str(uuid.uuid4()),
+                table=table,
+                order_date=datetime.now(),
+                items=order_items
             )
-            order_items.append(order_item)
+            
+            return self.order_repository.create(order)
         
-        order = Order(
-            id=str(uuid.uuid4()),
-            table=table,
-            order_date=datetime.now(),
-            items=order_items
-        )
-        
-        return self.order_repository.create(order)
+        # 트랜잭션 내에서 주문 생성 실행
+        return self.transaction_manager.execute_in_transaction(create_order_with_validation)
 
 
 class GetAllOrdersUseCase:

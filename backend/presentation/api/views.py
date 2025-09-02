@@ -7,10 +7,10 @@ from urllib.parse import quote
 from domain.use_cases.food_use_cases import GetAllFoodsUseCase, GetFoodByIdUseCase, GetFoodsByCategoryUseCase
 from domain.use_cases.table_use_cases import GetAllTablesUseCase, GetTableByIdUseCase, CreateTableUseCase
 from domain.use_cases.order_use_cases import CreateOrderUseCase, GetAllOrdersUseCase, GetOrdersByTableUseCase, CreatePreOrderUseCase, UpdateOrderStatusUseCase, GetPreOrderByPaymentInfoUseCase, ResetOrdersByTableUseCase
-from domain.repositories.order_repository import OrderRepository
 from domain.entities.food import FoodCategory
 from infrastructure.database.repositories import DjangoFoodRepository, DjangoTableRepository, DjangoOrderRepository
 from infrastructure.database.models import PaymentDepositModel
+from infrastructure.transaction.django_transaction_manager import DjangoTransactionManager
 from presentation.serializers.food_serializers import FoodSerializer
 from presentation.serializers.table_serializers import TableSerializer
 from presentation.serializers.order_serializers import OrderSerializer, CreateOrderSerializer, OrderHistorySerializer, CreatePreOrderSerializer
@@ -23,6 +23,7 @@ from infrastructure.external.discord_service import discord_service
 food_repository = DjangoFoodRepository()
 table_repository = DjangoTableRepository()
 order_repository = DjangoOrderRepository()
+transaction_manager = DjangoTransactionManager()
 
 # Food use cases
 get_all_foods_use_case = GetAllFoodsUseCase(food_repository)
@@ -35,7 +36,7 @@ get_table_by_id_use_case = GetTableByIdUseCase(table_repository)
 create_table_use_case = CreateTableUseCase(table_repository)
 
 # Order use cases
-create_order_use_case = CreateOrderUseCase(order_repository, food_repository, table_repository)
+create_order_use_case = CreateOrderUseCase(order_repository, food_repository, table_repository, transaction_manager)
 get_all_orders_use_case = GetAllOrdersUseCase(order_repository)
 get_orders_by_table_use_case = GetOrdersByTableUseCase(order_repository)
 create_pre_order_use_case = CreatePreOrderUseCase(order_repository, table_repository, food_repository)

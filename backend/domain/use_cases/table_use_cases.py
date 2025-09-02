@@ -25,5 +25,10 @@ class CreateTableUseCase:
         self.table_repository = table_repository
     
     def execute(self) -> Table:
-        table = Table.create()
+        # 현재 테이블 수를 기반으로 이름 생성
+        existing_tables = self.table_repository.get_all()
+        table_number = len(existing_tables) + 1
+        table_name = f"테이블{table_number}"
+        
+        table = Table.create(name=table_name)
         return self.table_repository.create(table)
