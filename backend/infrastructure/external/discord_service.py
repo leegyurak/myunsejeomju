@@ -122,7 +122,7 @@ class DiscordNotificationService:
         
         try:
             # 기본 메시지 구성
-            notification_message = f"{table_id}번 테이블에서 직원을 호출하였습니다!"
+            notification_message = f"{table_id}에서 직원을 호출하였습니다!"
             if message:
                 notification_message += f" 메시지: {message}"
             
@@ -133,7 +133,7 @@ class DiscordNotificationService:
                 "fields": [
                     {
                         "name": "테이블",
-                        "value": f"{table_id}번",
+                        "value": f"{table_id}",
                         "inline": True
                     }
                 ],

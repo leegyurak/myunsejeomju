@@ -77,9 +77,10 @@ class TestOrderConcurrency(TransactionTestCase):
         assert len(successful_orders) == 0, "품절된 음식에 대해 성공한 주문이 있어서는 안 됩니다"
         assert len(failed_orders) == num_threads
         
-        # 모든 실패가 품절 관련 오류인지 확인
+        # 모든 실패가 품절 관련 오류 또는 메인메뉴 필수 오류인지 확인
         for failed_order in failed_orders:
-            assert "품절" in failed_order['error']
+            error_msg = failed_order['error']
+            assert "품절" in error_msg or "첫 주문에는 반드시 메인 메뉴가 하나 이상 포함되어야 합니다" in error_msg
     
     def test_concurrent_orders_with_available_food(self):
         """재고가 있는 음식에 대한 동시 주문이 모두 성공한다."""

@@ -452,7 +452,7 @@ def call_staff(request, table_id):
         message = request.data.get('message', '') if request.data else ''
         
         # Discord 알림 전송
-        success = discord_service.send_staff_call_notification(table_id, message)
+        success = discord_service.send_staff_call_notification(table.name, message)
         
         if success:
             return Response(

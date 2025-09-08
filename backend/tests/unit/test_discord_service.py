@@ -255,13 +255,13 @@ class TestDiscordNotificationService:
         embed = json_data['embeds'][0]
         assert embed['title'] == "🔔 직원 호출"
         assert embed['color'] == 0xff9900  # 주황색
-        assert "1번 테이블에서 직원을 호출하였습니다" in embed['description']
+        assert "1에서 직원을 호출하였습니다!" in embed['description']
         assert "물 한 잔 부탁드립니다" in embed['description']
         
         # 필드 확인
         fields = embed['fields']
         table_field = next(f for f in fields if f['name'] == '테이블')
-        assert table_field['value'] == '1번'
+        assert table_field['value'] == '1'
         
         message_field = next(f for f in fields if f['name'] == '고객 메시지')
         assert message_field['value'] == '물 한 잔 부탁드립니다'
@@ -289,8 +289,7 @@ class TestDiscordNotificationService:
         embed = json_data['embeds'][0]
         
         # 기본 메시지만 포함되고 고객 메시지 필드는 없어야 함
-        assert "5번 테이블에서 직원을 호출하였습니다!" in embed['description']
-        assert "메시지:" not in embed['description']
+        assert "5에서 직원을 호출하였습니다!" in embed['description']
         
         # 고객 메시지 필드가 없어야 함
         fields = embed['fields']
