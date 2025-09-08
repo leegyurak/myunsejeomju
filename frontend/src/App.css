@@ -1331,9 +1331,9 @@ body::after {
   font-size: 14px;
 }
 
-@media (max-width: 450px) and (min-width: 375px) {
+@media (max-width: 480px) {
   .name-input-buttons .cancel-button {
-    font-size: 12px;
+    font-size: 11px;
   }
 }
 
