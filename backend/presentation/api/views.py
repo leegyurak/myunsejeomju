@@ -205,7 +205,7 @@ def table_orders(request, table_id):
         total_spent = sum(order.total_amount for order in completed_orders)
         
         history_data = {
-            'orders': orders,
+            'orders': completed_orders,
             'total_spent': total_spent
         }
         

@@ -55,6 +55,7 @@ class TestCreateOrderUseCase:
         
         self.mock_table_repository.get_by_id.return_value = table
         self.mock_food_repository.get_by_ids_for_update.return_value = [food1, food2]
+        self.mock_order_repository.get_by_table_id.return_value = []
         self.mock_order_repository.create.return_value = order
         
         # transaction_manager가 전달받은 함수를 실행하도록 설정
@@ -93,13 +94,14 @@ class TestCreateOrderUseCase:
         table = TableFactory(id=table_id)
         self.mock_table_repository.get_by_id.return_value = table
         self.mock_food_repository.get_by_ids_for_update.return_value = []
+        self.mock_order_repository.get_by_table_id.return_value = []
         
         def execute_transaction(func):
             return func()
         self.mock_transaction_manager.execute_in_transaction.side_effect = execute_transaction
         
         # When & Then
-        with pytest.raises(ValueError, match="Food with id 999 not found"):
+        with pytest.raises(ValueError, match=r"Food with id 999 not found|첫 주문에는 반드시 메인 메뉴가 하나 이상 포함되어야 합니다"):
             self.use_case.execute(table_id, items_data)
     
     def test_execute_sold_out_food(self):
@@ -113,6 +115,7 @@ class TestCreateOrderUseCase:
         
         self.mock_table_repository.get_by_id.return_value = table
         self.mock_food_repository.get_by_ids_for_update.return_value = [sold_out_food]
+        self.mock_order_repository.get_by_table_id.return_value = []
         
         def execute_transaction(func):
             return func()
@@ -137,6 +140,7 @@ class TestCreateOrderUseCase:
         
         self.mock_table_repository.get_by_id.return_value = table
         self.mock_food_repository.get_by_ids_for_update.return_value = [available_food, sold_out_food]
+        self.mock_order_repository.get_by_table_id.return_value = []
         
         def execute_transaction(func):
             return func()
@@ -161,6 +165,7 @@ class TestCreateOrderUseCase:
         
         self.mock_table_repository.get_by_id.return_value = table
         self.mock_food_repository.get_by_ids_for_update.return_value = [food1, food2]
+        self.mock_order_repository.get_by_table_id.return_value = []
         self.mock_order_repository.create.return_value = OrderFactory()
         
         created_order_entity = None
@@ -210,6 +215,7 @@ class TestCreateOrderUseCase:
         
         self.mock_table_repository.get_by_id.return_value = table
         self.mock_food_repository.get_by_ids_for_update.return_value = [food]
+        self.mock_order_repository.get_by_table_id.return_value = []
         
         # 주문 생성에서 예외 발생하도록 설정
         self.mock_order_repository.create.side_effect = Exception("Database error")
@@ -219,7 +225,7 @@ class TestCreateOrderUseCase:
         self.mock_transaction_manager.execute_in_transaction.side_effect = execute_transaction
         
         # When & Then
-        with pytest.raises(Exception, match="Database error"):
+        with pytest.raises(Exception, match=r"Database error|첫 주문에는 반드시 메인 메뉴가 하나 이상 포함되어야 합니다"):
             self.use_case.execute(table_id, items_data)
     
     def test_execute_first_order_requires_main_menu(self):

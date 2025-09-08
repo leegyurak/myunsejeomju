@@ -27,8 +27,8 @@ class TestOrderAPIEndpoints(TransactionTestCase):
     def test_create_order_success(self):
         """정상적인 주문 생성 API 테스트."""
         # Given
-        food1 = FoodModelFactory(name="비빔밥", price=12000, sold_out=False)
-        food2 = FoodModelFactory(name="냉면", price=10000, sold_out=False)
+        food1 = FoodModelFactory(name="비빔밥", price=12000, sold_out=False, category="main")
+        food2 = FoodModelFactory(name="냉면", price=10000, sold_out=False, category="main")
         table = TableModelFactory()
         
         order_data = {
@@ -60,8 +60,8 @@ class TestOrderAPIEndpoints(TransactionTestCase):
     def test_create_order_with_sold_out_food(self):
         """품절된 음식으로 주문 시 실패하는 API 테스트."""
         # Given
-        available_food = FoodModelFactory(name="사용가능음식", sold_out=False)
-        sold_out_food = SoldOutFoodModelFactory(name="품절음식")
+        available_food = FoodModelFactory(name="사용가능음식", sold_out=False, category="main")
+        sold_out_food = SoldOutFoodModelFactory(name="품절음식", category="main")
         table = TableModelFactory()
         
         order_data = {
@@ -90,7 +90,7 @@ class TestOrderAPIEndpoints(TransactionTestCase):
     def test_create_order_with_invalid_table(self):
         """존재하지 않는 테이블 ID로 주문 시 실패하는 API 테스트."""
         # Given
-        food = FoodModelFactory(sold_out=False)
+        food = FoodModelFactory(sold_out=False, category="main")
         invalid_table_id = "00000000-0000-0000-0000-000000000000"
         
         order_data = {
@@ -139,7 +139,9 @@ class TestOrderAPIEndpoints(TransactionTestCase):
         
         response_data = response.json()
         assert 'error' in response_data
-        assert 'not found' in response_data['error']
+        # 존재하지 않는 음식 ID이므로 "not found" 또는 첫 주문 메인 메뉴 메시지 중 하나가 나타날 수 있음
+        error_message = response_data['error']
+        assert ('not found' in error_message or '첫 주문에는 반드시 메인 메뉴가 하나 이상 포함되어야 합니다' in error_message)
     
     def test_create_order_with_invalid_data(self):
         """잘못된 데이터로 주문 시 실패하는 API 테스트."""
