@@ -28,7 +28,7 @@ class TestFood:
             id=1,
             name="비빔밥",
             price=12000,
-            category=FoodCategory.MENU,
+            category=FoodCategory.MAIN,
             description="맛있는 비빔밥",
             image="http://example.com/bibimbap.jpg",
             sold_out=False
@@ -38,7 +38,7 @@ class TestFood:
         assert food.id == 1
         assert food.name == "비빔밥"
         assert food.price == 12000
-        assert food.category == FoodCategory.MENU
+        assert food.category == FoodCategory.MAIN
         assert food.description == "맛있는 비빔밥"
         assert food.image == "http://example.com/bibimbap.jpg"
         assert food.sold_out is False
@@ -46,15 +46,15 @@ class TestFood:
     def test_food_category_enum(self):
         """음식 카테고리 열거형이 올바르게 작동한다."""
         # Given & When & Then
-        assert FoodCategory.MENU.value == "menu"
-        assert FoodCategory.DRINKS.value == "drinks"
+        assert FoodCategory.MAIN.value == "main"
+        assert FoodCategory.SIDE.value == "side"
         
         # 문자열로 카테고리 생성 가능
-        menu_category = FoodCategory("menu")
-        drinks_category = FoodCategory("drinks")
+        menu_category = FoodCategory("main")
+        drinks_category = FoodCategory("side")
         
-        assert menu_category == FoodCategory.MENU
-        assert drinks_category == FoodCategory.DRINKS
+        assert menu_category == FoodCategory.MAIN
+        assert drinks_category == FoodCategory.SIDE
     
     def test_food_factory(self):
         """음식 팩토리가 올바르게 작동한다."""
@@ -65,7 +65,7 @@ class TestFood:
         assert food.id is not None
         assert food.name is not None
         assert food.price > 0
-        assert food.category in [FoodCategory.MENU, FoodCategory.DRINKS]
+        assert food.category in [FoodCategory.MAIN, FoodCategory.SIDE]
         assert food.description is not None
         assert food.image is not None
         assert isinstance(food.sold_out, bool)

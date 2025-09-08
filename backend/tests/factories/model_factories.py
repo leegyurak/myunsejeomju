@@ -24,7 +24,7 @@ class FoodModelFactory(DjangoModelFactory):
     
     name = factory.Sequence(lambda n: f"음식{n}")
     price = factory.Faker('random_int', min=5000, max=25000)
-    category = factory.Faker('random_element', elements=['menu', 'drinks'])
+    category = factory.Faker('random_element', elements=['main', 'side'])
     description = factory.Faker('sentence', nb_words=5)
     image = factory.Faker('url')
     sold_out = False

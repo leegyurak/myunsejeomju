@@ -42,7 +42,7 @@ class TestModelFactories(TestCase):
         assert food.id is not None
         assert food.name is not None
         assert food.price > 0
-        assert food.category in ['menu', 'drinks']
+        assert food.category in ['main', 'side']
         assert food.description is not None
         assert food.image is not None
         assert isinstance(food.sold_out, bool)
@@ -68,14 +68,14 @@ class TestModelFactories(TestCase):
         food = FoodModelFactory(
             name="커스텀 비빔밥",
             price=15000,
-            category=FoodCategory.MENU.value,
+            category=FoodCategory.MAIN.value,
             sold_out=True
         )
         
         # Then
         assert food.name == "커스텀 비빔밥"
         assert food.price == 15000
-        assert food.category == "menu"
+        assert food.category == "main"
         assert food.sold_out is True
     
     def test_table_model_factory_creates_valid_table(self):
@@ -163,7 +163,7 @@ class TestEntityFactories:
         assert food.id is not None
         assert food.name is not None
         assert food.price > 0
-        assert food.category in [FoodCategory.MENU, FoodCategory.DRINKS]
+        assert food.category in [FoodCategory.MAIN, FoodCategory.SIDE]
         assert food.description is not None
         assert food.image is not None
         assert isinstance(food.sold_out, bool)
@@ -184,7 +184,7 @@ class TestEntityFactories:
         
         # Then
         assert isinstance(drink, Food)
-        assert drink.category == FoodCategory.DRINKS
+        assert drink.category == FoodCategory.SIDE
         assert "음료" in drink.name
     
     def test_food_factory_with_custom_attributes(self):
@@ -194,7 +194,7 @@ class TestEntityFactories:
             id=999,
             name="특별한 음식",
             price=25000,
-            category=FoodCategory.MENU,
+            category=FoodCategory.MAIN,
             sold_out=True
         )
         
@@ -202,7 +202,7 @@ class TestEntityFactories:
         assert food.id == 999
         assert food.name == "특별한 음식"
         assert food.price == 25000
-        assert food.category == FoodCategory.MENU
+        assert food.category == FoodCategory.MAIN
         assert food.sold_out is True
     
     def test_table_factory_creates_valid_table(self):

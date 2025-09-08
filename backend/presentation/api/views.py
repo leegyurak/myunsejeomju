@@ -59,7 +59,7 @@ def food_list(request):
             foods = get_foods_by_category_use_case.execute(food_category)
         except ValueError:
             return Response(
-                {'error': 'Invalid category. Must be "menu" or "drinks"'}, 
+                {'error': 'Invalid category. Must be "main" or "side"'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
     else:

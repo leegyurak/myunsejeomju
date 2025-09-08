@@ -73,17 +73,17 @@ class TestDjangoFoodRepository:
     def test_get_by_category_menu(self):
         """메뉴 카테고리로 음식을 필터링할 수 있다."""
         # Given
-        FoodModelFactory(category='menu')
-        FoodModelFactory(category='drinks')
+        FoodModelFactory(category='main')
+        FoodModelFactory(category='side')
         repository = DjangoFoodRepository()
         
         # When
         from domain.entities.food import FoodCategory
-        foods = repository.get_by_category(FoodCategory.MENU)
+        foods = repository.get_by_category(FoodCategory.MAIN)
         
         # Then
         assert len(foods) == 1
-        assert foods[0].category.value == 'menu'
+        assert foods[0].category.value == 'main'
     
     def test_get_by_ids_for_update(self):
         """select_for_update로 여러 음식을 조회할 수 있다."""

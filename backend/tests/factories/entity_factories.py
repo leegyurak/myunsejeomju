@@ -20,7 +20,7 @@ class FoodFactory(factory.Factory):
     id = factory.Sequence(lambda n: n)
     name = factory.Sequence(lambda n: f"음식{n}")
     price = factory.Faker('random_int', min=5000, max=25000)
-    category = factory.LazyFunction(lambda: FoodCategory.MENU)
+    category = factory.LazyFunction(lambda: FoodCategory.MAIN)
     description = factory.Faker('sentence', nb_words=5)
     image = factory.Faker('url')
     sold_out = False
@@ -33,7 +33,7 @@ class SoldOutFoodFactory(FoodFactory):
 
 class DrinkFoodFactory(FoodFactory):
     """Factory for creating drink Food entity instances."""
-    category = factory.LazyFunction(lambda: FoodCategory.DRINKS)
+    category = factory.LazyFunction(lambda: FoodCategory.SIDE)
     name = factory.Sequence(lambda n: f"음료{n}")
 
 

@@ -101,10 +101,10 @@ class TestGetFoodsByCategoryUseCase:
     def test_execute_returns_menu_foods(self):
         """메뉴 카테고리 음식들을 반환한다."""
         # Given
-        category = FoodCategory.MENU
+        category = FoodCategory.MAIN
         menu_foods = [
-            FoodFactory(name="비빔밥", category=FoodCategory.MENU),
-            FoodFactory(name="냉면", category=FoodCategory.MENU)
+            FoodFactory(name="비빔밥", category=FoodCategory.MAIN),
+            FoodFactory(name="냉면", category=FoodCategory.MAIN)
         ]
         self.mock_repository.get_by_category.return_value = menu_foods
         
@@ -118,7 +118,7 @@ class TestGetFoodsByCategoryUseCase:
     def test_execute_returns_drinks_foods(self):
         """음료 카테고리 음식들을 반환한다."""
         # Given
-        category = FoodCategory.DRINKS
+        category = FoodCategory.SIDE
         drink_foods = [
             DrinkFoodFactory(name="콜라"),
             DrinkFoodFactory(name="사이다")
@@ -135,7 +135,7 @@ class TestGetFoodsByCategoryUseCase:
     def test_execute_returns_empty_list_when_no_foods_in_category(self):
         """해당 카테고리에 음식이 없을 때 빈 리스트를 반환한다."""
         # Given
-        category = FoodCategory.MENU
+        category = FoodCategory.MAIN
         self.mock_repository.get_by_category.return_value = []
         
         # When

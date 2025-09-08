@@ -9,8 +9,8 @@ class Command(BaseCommand):
         # Clear existing table data
         TableModel.objects.all().delete()
         
-        # Create 15 tables
-        num_tables = 15
+        # Create 30 tables
+        num_tables = 30
         for i in range(1, num_tables + 1):
             TableModel.objects.create(name=f"{i}번 테이블")
             

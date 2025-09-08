@@ -6,7 +6,7 @@ from unittest.mock import Mock, MagicMock, patch
 import uuid
 from datetime import datetime
 
-from domain.use_cases.order_use_cases import CreateOrderUseCase
+from domain.use_cases.order_use_cases import CreateOrderUseCase, CreatePreOrderUseCase
 from domain.entities.food import Food, FoodCategory
 from domain.entities.table import Table
 from domain.entities.order import Order, OrderItem
@@ -221,3 +221,180 @@ class TestCreateOrderUseCase:
         # When & Then
         with pytest.raises(Exception, match="Database error"):
             self.use_case.execute(table_id, items_data)
+    
+    def test_execute_first_order_requires_main_menu(self):
+        """테이블의 첫 번째 주문에는 메인 메뉴가 반드시 포함되어야 한다."""
+        # Given
+        table_id = str(uuid.uuid4())
+        # 사이드 메뉴만 주문하는 경우
+        items_data = [{'food_id': 1, 'quantity': 1}]
+        
+        table = TableFactory(id=table_id)
+        side_food = FoodFactory(id=1, category=FoodCategory.SIDE, name="사이다")
+        
+        self.mock_table_repository.get_by_id.return_value = table
+        self.mock_food_repository.get_by_ids_for_update.return_value = [side_food]
+        # 테이블에 기존 주문이 없음 (첫 주문)
+        self.mock_order_repository.get_by_table_id.return_value = []
+        
+        def execute_transaction(func):
+            return func()
+        self.mock_transaction_manager.execute_in_transaction.side_effect = execute_transaction
+        
+        # When & Then
+        with pytest.raises(ValueError, match="첫 주문에는 반드시 메인 메뉴가 하나 이상 포함되어야 합니다."):
+            self.use_case.execute(table_id, items_data)
+    
+    def test_execute_first_order_with_main_menu_succeeds(self):
+        """테이블의 첫 번째 주문에 메인 메뉴가 포함되면 성공한다."""
+        # Given
+        table_id = str(uuid.uuid4())
+        items_data = [
+            {'food_id': 1, 'quantity': 1},  # 메인 메뉴
+            {'food_id': 2, 'quantity': 1}   # 사이드 메뉴
+        ]
+        
+        table = TableFactory(id=table_id)
+        main_food = FoodFactory(id=1, category=FoodCategory.MAIN, name="비빔밥")
+        side_food = FoodFactory(id=2, category=FoodCategory.SIDE, name="콜라")
+        order = OrderFactory()
+        
+        self.mock_table_repository.get_by_id.return_value = table
+        self.mock_food_repository.get_by_ids_for_update.return_value = [main_food, side_food]
+        # 테이블에 기존 주문이 없음 (첫 주문)
+        self.mock_order_repository.get_by_table_id.return_value = []
+        self.mock_order_repository.create.return_value = order
+        
+        def execute_transaction(func):
+            return func()
+        self.mock_transaction_manager.execute_in_transaction.side_effect = execute_transaction
+        
+        # When
+        result = self.use_case.execute(table_id, items_data)
+        
+        # Then
+        assert result == order
+        self.mock_order_repository.create.assert_called_once()
+    
+    def test_execute_second_order_can_be_side_only(self):
+        """테이블의 두 번째 이후 주문은 사이드 메뉴만 주문해도 된다."""
+        # Given
+        table_id = str(uuid.uuid4())
+        items_data = [{'food_id': 1, 'quantity': 1}]  # 사이드 메뉴만
+        
+        table = TableFactory(id=table_id)
+        side_food = FoodFactory(id=1, category=FoodCategory.SIDE, name="콜라")
+        existing_order = OrderFactory()
+        order = OrderFactory()
+        
+        self.mock_table_repository.get_by_id.return_value = table
+        self.mock_food_repository.get_by_ids_for_update.return_value = [side_food]
+        # 테이블에 기존 주문이 있음 (첫 주문이 아님)
+        self.mock_order_repository.get_by_table_id.return_value = [existing_order]
+        self.mock_order_repository.create.return_value = order
+        
+        def execute_transaction(func):
+            return func()
+        self.mock_transaction_manager.execute_in_transaction.side_effect = execute_transaction
+        
+        # When
+        result = self.use_case.execute(table_id, items_data)
+        
+        # Then
+        assert result == order
+        self.mock_order_repository.create.assert_called_once()
+
+
+@pytest.mark.unit
+@pytest.mark.django_db(transaction=True)
+class TestCreatePreOrderUseCase:
+    """Test cases for CreatePreOrderUseCase."""
+    
+    def setup_method(self):
+        """각 테스트 메서드 실행 전 설정."""
+        self.mock_order_repository = Mock()
+        self.mock_food_repository = Mock()
+        self.mock_table_repository = Mock()
+        
+        self.use_case = CreatePreOrderUseCase(
+            self.mock_order_repository,
+            self.mock_table_repository,
+            self.mock_food_repository
+        )
+    
+    def test_execute_first_pre_order_requires_main_menu(self):
+        """테이블의 첫 번째 선주문에는 메인 메뉴가 반드시 포함되어야 한다."""
+        # Given
+        table_id = str(uuid.uuid4())
+        payer_name = "홍길동"
+        total_amount = 5000
+        # 사이드 메뉴만 주문하는 경우
+        items_data = [{'food_id': 1, 'quantity': 1}]
+        
+        table = TableFactory(id=table_id)
+        side_food = FoodFactory(id=1, category=FoodCategory.SIDE, name="콜라")
+        
+        self.mock_table_repository.get_by_id.return_value = table
+        self.mock_food_repository.get_by_id.return_value = side_food
+        # 테이블에 기존 주문이 없음 (첫 주문)
+        self.mock_order_repository.get_by_table_id.return_value = []
+        
+        # When & Then
+        with pytest.raises(ValueError, match="첫 주문에는 반드시 메인 메뉴가 하나 이상 포함되어야 합니다."):
+            self.use_case.execute(table_id, payer_name, total_amount, items_data)
+    
+    def test_execute_first_pre_order_with_main_menu_succeeds(self):
+        """테이블의 첫 번째 선주문에 메인 메뉴가 포함되면 성공한다."""
+        # Given
+        table_id = str(uuid.uuid4())
+        payer_name = "홍길동"
+        total_amount = 15000
+        items_data = [
+            {'food_id': 1, 'quantity': 1},  # 메인 메뉴
+            {'food_id': 2, 'quantity': 1}   # 사이드 메뉴
+        ]
+        
+        table = TableFactory(id=table_id)
+        main_food = FoodFactory(id=1, category=FoodCategory.MAIN, name="비빔밥")
+        side_food = FoodFactory(id=2, category=FoodCategory.SIDE, name="콜라")
+        order = OrderFactory()
+        
+        self.mock_table_repository.get_by_id.return_value = table
+        # 첫 번째 호출은 메인 메뉴, 두 번째 호출은 사이드 메뉴 반환
+        self.mock_food_repository.get_by_id.side_effect = [main_food, main_food, side_food]
+        # 테이블에 기존 주문이 없음 (첫 주문)
+        self.mock_order_repository.get_by_table_id.return_value = []
+        self.mock_order_repository.create.return_value = order
+        
+        # When
+        result = self.use_case.execute(table_id, payer_name, total_amount, items_data)
+        
+        # Then
+        assert result == order
+        self.mock_order_repository.create.assert_called_once()
+    
+    def test_execute_second_pre_order_can_be_side_only(self):
+        """테이블의 두 번째 이후 선주문은 사이드 메뉴만 주문해도 된다."""
+        # Given
+        table_id = str(uuid.uuid4())
+        payer_name = "홍길동"
+        total_amount = 3000
+        items_data = [{'food_id': 1, 'quantity': 1}]  # 사이드 메뉴만
+        
+        table = TableFactory(id=table_id)
+        side_food = FoodFactory(id=1, category=FoodCategory.SIDE, name="콜라")
+        existing_order = OrderFactory()
+        order = OrderFactory()
+        
+        self.mock_table_repository.get_by_id.return_value = table
+        self.mock_food_repository.get_by_id.return_value = side_food
+        # 테이블에 기존 주문이 있음 (첫 주문이 아님)
+        self.mock_order_repository.get_by_table_id.return_value = [existing_order]
+        self.mock_order_repository.create.return_value = order
+        
+        # When
+        result = self.use_case.execute(table_id, payer_name, total_amount, items_data)
+        
+        # Then
+        assert result == order
+        self.mock_order_repository.create.assert_called_once()

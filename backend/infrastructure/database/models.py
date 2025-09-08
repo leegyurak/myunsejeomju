@@ -5,8 +5,8 @@ import uuid
 
 class FoodModel(models.Model):
     CATEGORY_CHOICES = [
-        ('menu', 'Menu'),
-        ('drinks', 'Drinks'),
+        ('main', 'Main'),
+        ('side', 'Side'),
     ]
     
     name = models.CharField(max_length=100, verbose_name='음식명')

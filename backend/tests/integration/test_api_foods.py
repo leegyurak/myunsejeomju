@@ -55,17 +55,17 @@ class TestFoodAPIEndpoints(TransactionTestCase):
         # Given
         menu_food = FoodModelFactory(
             name="비빔밥", 
-            category=FoodCategory.MENU.value,
+            category=FoodCategory.MAIN.value,
             price=12000
         )
         drink_food = FoodModelFactory(
             name="콜라", 
-            category=FoodCategory.DRINKS.value,
+            category=FoodCategory.SIDE.value,
             price=2000
         )
         
         # When
-        response = self.client.get('/api/foods/?category=menu')
+        response = self.client.get('/api/foods/?category=main')
         
         # Then
         assert response.status_code == status.HTTP_200_OK
@@ -73,22 +73,22 @@ class TestFoodAPIEndpoints(TransactionTestCase):
         response_data = response.json()
         assert len(response_data) == 1
         assert response_data[0]['name'] == "비빔밥"
-        assert response_data[0]['category'] == "menu"
+        assert response_data[0]['category'] == "main"
     
     def test_get_food_list_by_drinks_category(self):
         """음료 카테고리로 음식 목록을 필터링할 수 있다."""
         # Given
         menu_food = FoodModelFactory(
             name="비빔밥", 
-            category=FoodCategory.MENU.value
+            category=FoodCategory.MAIN.value
         )
         drink_food = FoodModelFactory(
             name="콜라", 
-            category=FoodCategory.DRINKS.value
+            category=FoodCategory.SIDE.value
         )
         
         # When
-        response = self.client.get('/api/foods/?category=drinks')
+        response = self.client.get('/api/foods/?category=side')
         
         # Then
         assert response.status_code == status.HTTP_200_OK
@@ -96,7 +96,7 @@ class TestFoodAPIEndpoints(TransactionTestCase):
         response_data = response.json()
         assert len(response_data) == 1
         assert response_data[0]['name'] == "콜라"
-        assert response_data[0]['category'] == "drinks"
+        assert response_data[0]['category'] == "side"
     
     def test_get_food_list_with_invalid_category(self):
         """잘못된 카테고리로 요청 시 400 오류를 반환한다."""
@@ -120,7 +120,7 @@ class TestFoodAPIEndpoints(TransactionTestCase):
             name="비빔밥",
             price=12000,
             description="맛있는 비빔밥",
-            category=FoodCategory.MENU.value
+            category=FoodCategory.MAIN.value
         )
         
         # When
@@ -134,7 +134,7 @@ class TestFoodAPIEndpoints(TransactionTestCase):
         assert response_data['name'] == "비빔밥"
         assert response_data['price'] == 12000
         assert response_data['description'] == "맛있는 비빔밥"
-        assert response_data['category'] == "menu"
+        assert response_data['category'] == "main"
         assert response_data['soldOut'] is False
     
     def test_get_food_detail_not_found(self):

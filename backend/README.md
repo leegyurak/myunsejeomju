@@ -80,7 +80,7 @@ backend/
 - **주문 이력 추적** 및 총 지출액 계산
 
 ### 3. 음식 카탈로그 관리
-- **카테고리 기반 분류**: `menu`(메뉴), `drinks`(음료)
+- **카테고리 기반 분류**: `main`(메인), `side`(사이드)
 - **재고 관리** 및 품절 상태 추적
 - **동적 가격 책정** (주문 시점 가격 고정)
 
@@ -98,7 +98,7 @@ backend/
 ### 음식 관리
 ```http
 GET    /api/foods/                     # 전체 음식 목록 조회
-GET    /api/foods/?category=menu       # 카테고리별 필터링
+GET    /api/foods/?category=main       # 카테고리별 필터링
 GET    /api/foods/{food_id}/           # 특정 음식 상세 정보
 ```
 
@@ -132,7 +132,7 @@ POST   /api/webhook/payment/           # PayAction 결제 웹훅
 class FoodModel:
     name: str                    # 음식명
     price: int                   # 가격 (원)
-    category: str               # 'menu' 또는 'drinks'
+    category: str               # 'main' 또는 'side'
     description: str            # 설명 (선택사항)
     image: str                  # 이미지 URL (선택사항)
     sold_out: bool             # 품절 여부

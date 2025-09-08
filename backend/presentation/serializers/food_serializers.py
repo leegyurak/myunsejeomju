@@ -6,7 +6,7 @@ class FoodSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(max_length=100)
     price = serializers.IntegerField(min_value=0)
-    category = serializers.ChoiceField(choices=['menu', 'drinks'])
+    category = serializers.ChoiceField(choices=['main', 'side'])
     description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     image = serializers.URLField(required=False, allow_blank=True, allow_null=True)
     sold_out = serializers.BooleanField(default=False, source='soldOut')

@@ -3,6 +3,7 @@ from datetime import datetime
 import uuid
 
 from ..entities.order import Order, OrderItem
+from ..entities.food import FoodCategory
 from ..repositories.order_repository import OrderRepository
 from ..repositories.food_repository import FoodRepository
 from ..repositories.table_repository import TableRepository
@@ -33,6 +34,22 @@ class CreateOrderUseCase:
             # select_for_update로 음식들을 조회 (동시성 제어)
             foods = self.food_repository.get_by_ids_for_update(food_ids)
             food_dict = {food.id: food for food in foods}
+            
+            # 테이블의 가시 주문 수 확인
+            existing_orders = self.order_repository.get_by_table_id(table_id)
+            visible_orders_count = len(existing_orders)
+            
+            # 가시 주문이 0개인 경우, 메인 메뉴가 반드시 포함되어야 함
+            if visible_orders_count == 0:
+                has_main_menu = False
+                for item_data in items_data:
+                    food = food_dict.get(item_data['food_id'])
+                    if food and food.category == FoodCategory.MAIN:
+                        has_main_menu = True
+                        break
+                
+                if not has_main_menu:
+                    raise ValueError("첫 주문에는 반드시 메인 메뉴가 하나 이상 포함되어야 합니다.")
             
             # 품절 체크 및 주문 아이템 생성
             for item_data in items_data:
@@ -91,6 +108,22 @@ class CreatePreOrderUseCase:
         table = self.table_repository.get_by_id(table_id)
         if not table:
             raise ValueError(f"Table with id {table_id} not found")
+        
+        # 테이블의 가시 주문 수 확인
+        existing_orders = self.order_repository.get_by_table_id(table_id)
+        visible_orders_count = len(existing_orders)
+        
+        # 가시 주문이 0개인 경우, 메인 메뉴가 반드시 포함되어야 함
+        if visible_orders_count == 0:
+            has_main_menu = False
+            for item_data in items_data:
+                food = self.food_repository.get_by_id(item_data['food_id'])
+                if food and food.category == FoodCategory.MAIN:
+                    has_main_menu = True
+                    break
+            
+            if not has_main_menu:
+                raise ValueError("첫 주문에는 반드시 메인 메뉴가 하나 이상 포함되어야 합니다.")
         
         order_items = []
         

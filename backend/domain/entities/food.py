@@ -4,8 +4,8 @@ from enum import Enum
 
 
 class FoodCategory(Enum):
-    MENU = 'menu'
-    DRINKS = 'drinks'
+    MAIN = 'main'
+    SIDE = 'side'
 
 
 @dataclass
