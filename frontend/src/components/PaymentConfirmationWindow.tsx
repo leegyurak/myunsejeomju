@@ -43,24 +43,7 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
       '우리': 'wooribank://remit'
     };
 
-    // If payment method is a bank, use deep link instead of API
-    if (paymentMethod && bankDeepLinks[paymentMethod]) {
-      const deepLink = bankDeepLinks[paymentMethod];
-      console.log('Bank payment detected:', paymentMethod, 'Using deep link:', deepLink);
-      
-      // Set a mock order ID for bank payments (you can generate a proper one or modify API)
-      setOrderId(`bank_${Date.now()}`);
-      setRedirectUrl(deepLink);
-      
-      // Open bank app in new tab after 1.5 seconds
-      setTimeout(() => {
-        window.open(deepLink, '_blank');
-      }, 1500);
-      
-      return;
-    }
-
-    // Call pre-order API for Toss payments
+    // Bank payment also needs pre-order API call
     const callPreOrderAPI = async () => {
       try {
         // Convert cartItems to API format
@@ -72,18 +55,32 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
         const response = await apiService.createPreOrder(tableId, payerName, totalAmount, orderItems);
         
         console.log('Pre-order API response:', response);
-        setRedirectUrl(response.redirect_url);
         setOrderId(response.order_id);
         
-        if (response.redirect_url) {
-          // Open Toss payment in new tab after 1.5 seconds
+        // If payment method is a bank, use deep link
+        if (paymentMethod && bankDeepLinks[paymentMethod]) {
+          const deepLink = bankDeepLinks[paymentMethod];
+          console.log('Bank payment detected:', paymentMethod, 'Using deep link:', deepLink);
+          setRedirectUrl(deepLink);
+          
+          // Open bank app in new tab after 1.5 seconds
           setTimeout(() => {
-            console.log('Opening Toss payment page in new tab:', response.redirect_url);
-            window.open(response.redirect_url, '_blank');
+            window.open(deepLink, '_blank');
           }, 1500);
         } else {
-          console.error('No redirect URL received from API');
-          alert('결제 페이지 URL을 받지 못했습니다. 다시 시도해주세요.');
+          // For Toss payments, use API redirect URL
+          setRedirectUrl(response.redirect_url);
+          
+          if (response.redirect_url) {
+            // Open Toss payment in new tab after 1.5 seconds
+            setTimeout(() => {
+              console.log('Opening Toss payment page in new tab:', response.redirect_url);
+              window.open(response.redirect_url, '_blank');
+            }, 1500);
+          } else {
+            console.error('No redirect URL received from API');
+            alert('결제 페이지 URL을 받지 못했습니다. 다시 시도해주세요.');
+          }
         }
         
       } catch (error) {

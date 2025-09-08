@@ -268,18 +268,6 @@ function TablePage({ tableId }: TablePageProps) {
     setShowOrderSuccess(false);
   };
 
-  const handleResetOrderHistory = async () => {
-    try {
-      await apiService.resetTableOrders(tableId);
-      // Reset local order history
-      setOrderHistory({ orders: [], totalSpent: 0 });
-      // Close receipt modal
-      setIsReceiptModalOpen(false);
-    } catch (error) {
-      console.error('Failed to reset order history:', error);
-      alert('주문 내역 초기화 중 오류가 발생했습니다. 다시 시도해주세요.');
-    }
-  };
 
 
 
@@ -337,7 +325,6 @@ function TablePage({ tableId }: TablePageProps) {
           isOpen={isReceiptModalOpen}
           onClose={handleReceiptClose}
           orderHistory={orderHistory}
-          onResetOrderHistory={handleResetOrderHistory}
         />
       )}
       <FoodDetailModal 

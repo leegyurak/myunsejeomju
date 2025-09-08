@@ -1,16 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { OrderHistory } from '../types/order';
 
 interface ReceiptModalProps {
   isOpen: boolean;
   onClose: () => void;
   orderHistory: OrderHistory;
-  onResetOrderHistory: () => void;
 }
 
-const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, orderHistory, onResetOrderHistory }) => {
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-
+const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, orderHistory }) => {
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('ko-KR', {
       month: 'long',
@@ -18,19 +15,6 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, orderHisto
       hour: '2-digit',
       minute: '2-digit'
     }).format(date);
-  };
-
-  const handleResetButtonClick = () => {
-    setShowConfirmModal(true);
-  };
-
-  const handleConfirmReset = () => {
-    setShowConfirmModal(false);
-    onResetOrderHistory();
-  };
-
-  const handleCancelReset = () => {
-    setShowConfirmModal(false);
   };
 
   return (
@@ -104,53 +88,10 @@ const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, orderHisto
                   </div>
                 ))}
               </div>
-              
-              <div className="receipt-actions">
-                <button 
-                  className="reset-order-history-btn"
-                  onClick={handleResetButtonClick}
-                >
-                  <span className="reset-btn-icon">🗑️</span>
-                  <span className="reset-btn-text">주문 내역 초기화</span>
-                </button>
-              </div>
             </>
           )}
         </div>
       </div>
-      
-      {/* Reset Confirmation Modal */}
-      {showConfirmModal && (
-        <>
-          <div className="modal-overlay active reset-confirm-overlay" onClick={handleCancelReset}></div>
-          <div className="reset-confirm-modal active">
-            <div className="reset-confirm-content">
-              <div className="reset-confirm-icon">⚠️</div>
-              <h3 className="reset-confirm-title">주문 내역 초기화</h3>
-              <p className="reset-confirm-message">
-                모든 주문 내역을 초기화하시겠습니까?
-              </p>
-              <p className="reset-confirm-warning">
-                이 작업은 되돌릴 수 없습니다.
-              </p>
-              <div className="reset-confirm-buttons">
-                <button 
-                  className="reset-cancel-btn"
-                  onClick={handleCancelReset}
-                >
-                  취소
-                </button>
-                <button 
-                  className="reset-confirm-btn"
-                  onClick={handleConfirmReset}
-                >
-                  초기화
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
     </>
   );
 };
