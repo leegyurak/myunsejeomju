@@ -117,3 +117,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
+
+# CSRF Settings
+CSRF_TRUSTED_ORIGINS = [
+    'https://admin.myunsejeomju.shop',
+]
+
+if DEBUG:
+    # 개발 환경에서 CSRF 체크 완화
+    CSRF_COOKIE_SECURE = False
+    CSRF_COOKIE_SAMESITE = 'Lax'
