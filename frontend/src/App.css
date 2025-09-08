@@ -853,6 +853,64 @@ body::after {
   line-height: 1.4;
 }
 
+/* Call Staff Button */
+.call-staff-button {
+  position: fixed;
+  right: 20px;
+  bottom: 260px;
+  width: 56px;
+  height: 56px;
+  background-color: #1e40af;
+  border: none;
+  border-radius: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(30, 64, 175, 0.4);
+  z-index: 950;
+  max-width: 480px;
+  transform: translateX(-50%);
+  margin-left: calc(50% - 480px/2 + 480px - 76px);
+}
+
+.call-staff-button svg {
+  width: 24px;
+  height: 24px;
+  color: white;
+}
+
+@media (max-width: 480px) {
+  .call-staff-button {
+    margin-left: 0;
+    transform: none;
+  }
+}
+
+.call-staff-button:hover {
+  background-color: #1d4ed8;
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(30, 64, 175, 0.5);
+}
+
+@media (max-width: 480px) {
+  .call-staff-button:hover {
+    transform: scale(1.05);
+  }
+}
+
+.call-staff-button:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 480px) {
+  .call-staff-button:active {
+    transform: scale(0.95);
+  }
+}
+
 /* Receipt Button */
 .receipt-button {
   position: fixed;
@@ -1907,4 +1965,198 @@ body::after {
     font-size: 13px;
     min-height: 48px;
   }
+}
+
+/* Call Staff Modal */
+.call-staff-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  width: 90%;
+  max-width: 400px;
+  background-color: white;
+  border-radius: 16px;
+  z-index: 1003;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.call-staff-modal.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.call-staff-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 0;
+  margin-bottom: 20px;
+}
+
+.call-staff-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1c1c1e;
+  margin: 0;
+}
+
+.call-staff-form {
+  padding: 0 24px 24px;
+}
+
+.call-staff-field {
+  margin-bottom: 24px;
+}
+
+.call-staff-field label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.call-staff-field textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e5e5ea;
+  border-radius: 12px;
+  font-size: 16px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.call-staff-field textarea:focus {
+  outline: none;
+  border-color: #1e40af;
+}
+
+.call-staff-field textarea:disabled {
+  background-color: #f2f2f7;
+  color: #8e8e93;
+}
+
+.call-staff-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.call-staff-buttons .cancel-button,
+.call-staff-buttons .call-button {
+  flex: 1;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.call-staff-buttons .cancel-button {
+  background-color: #3498db;
+  color: white;
+  font-size: 14px;
+}
+
+.call-staff-buttons .cancel-button:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.call-staff-buttons .cancel-button:disabled {
+  background-color: #d1d1d6;
+  color: #8e8e93;
+  cursor: not-allowed;
+}
+
+.call-staff-buttons .call-button {
+  background-color: #1e40af;
+  color: white;
+}
+
+.call-staff-buttons .call-button:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.call-staff-buttons .call-button:disabled {
+  background-color: #d1d1d6;
+  color: #8e8e93;
+  cursor: not-allowed;
+}
+
+.call-staff-buttons .call-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Call Staff Success Message */
+.call-staff-success-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.4s ease;
+}
+
+.call-staff-success-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.call-staff-success-message {
+  background-color: white;
+  border-radius: 20px;
+  padding: 40px 32px;
+  text-align: center;
+  max-width: 320px;
+  width: 90%;
+  transform: translateY(30px) scale(0.8);
+  opacity: 0;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.call-staff-success-message.active {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.call-staff-success-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  animation: bounce 0.8s ease-in-out;
+}
+
+.call-staff-success-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1c1c1e;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.call-staff-success-subtitle {
+  font-size: 15px;
+  color: #8e8e93;
+  font-weight: 500;
+  line-height: 1.4;
 }

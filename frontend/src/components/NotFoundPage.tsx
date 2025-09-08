@@ -12,14 +12,14 @@ const NotFoundPage: React.FC = () => {
       textAlign: 'center'
     }}>
       <h1 style={{
-        fontSize: '48px',
+        fontSize: '36px',
         marginBottom: '20px',
         color: '#333'
       }}>
-        면세주점에서 만나요!
+        면세점주에서 만나요!
       </h1>
       <p style={{
-        fontSize: '18px',
+        fontSize: '14px',
         color: '#666',
         lineHeight: '1.6'
       }}>

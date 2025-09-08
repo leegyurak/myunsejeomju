@@ -137,6 +137,16 @@ class ApiService {
     });
   }
 
+  // Call Staff API
+  async callStaff(tableId: string, message: string): Promise<void> {
+    return this.request<void>(`/tables/${tableId}/call-staff/`, {
+      method: 'POST',
+      body: JSON.stringify({
+        message,
+      }),
+    });
+  }
+
   private transformOrderHistory(apiResponse: ApiOrderHistory): OrderHistory {
     return {
       orders: apiResponse.orders.map(order => {

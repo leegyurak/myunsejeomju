@@ -7,6 +7,9 @@ import FoodGrid from './components/FoodGrid';
 import Footer from './components/Footer';
 import CartButton from './components/CartButton';
 import ReceiptButton from './components/ReceiptButton';
+import CallStaffButton from './components/CallStaffButton';
+import CallStaffModal from './components/CallStaffModal';
+import CallStaffSuccessMessage from './components/CallStaffSuccessMessage';
 import FoodDetailModal from './components/FoodDetailModal';
 import CartModal from './components/CartModal';
 import ReceiptModal from './components/ReceiptModal';
@@ -29,6 +32,9 @@ function TablePage({ tableId }: TablePageProps) {
   const location = useLocation();
   const [activeCategory, setActiveCategory] = useState<string>('main');
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState<boolean>(false);
+  const [isCallStaffModalOpen, setIsCallStaffModalOpen] = useState<boolean>(false);
+  const [isCallStaffSubmitting, setIsCallStaffSubmitting] = useState<boolean>(false);
+  const [showCallStaffSuccess, setShowCallStaffSuccess] = useState<boolean>(false);
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [isFoodDetailOpen, setIsFoodDetailOpen] = useState<boolean>(false);
   const [isCartModalOpen, setIsCartModalOpen] = useState<boolean>(false);
@@ -169,6 +175,36 @@ function TablePage({ tableId }: TablePageProps) {
     setIsReceiptModalOpen(false);
   };
 
+  const handleCallStaff = () => {
+    setIsCallStaffModalOpen(true);
+  };
+
+  const handleCallStaffSubmit = async (message: string) => {
+    if (isCallStaffSubmitting) return;
+    
+    setIsCallStaffSubmitting(true);
+    
+    try {
+      await apiService.callStaff(tableId, message);
+      setIsCallStaffModalOpen(false);
+      
+      setTimeout(() => {
+        setShowCallStaffSuccess(true);
+      }, 300);
+    } catch (error) {
+      console.error('직원호출 실패:', error);
+      alert('직원호출 중 오류가 발생했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsCallStaffSubmitting(false);
+    }
+  };
+
+  const handleCallStaffModalClose = () => {
+    if (!isCallStaffSubmitting) {
+      setIsCallStaffModalOpen(false);
+    }
+  };
+
   const handleFoodClick = (food: FoodItem) => {
     setSelectedFood(food);
     setIsFoodDetailOpen(true);
@@ -268,6 +304,10 @@ function TablePage({ tableId }: TablePageProps) {
     setShowOrderSuccess(false);
   };
 
+  const handleCallStaffSuccessComplete = () => {
+    setShowCallStaffSuccess(false);
+  };
+
 
 
 
@@ -315,6 +355,7 @@ function TablePage({ tableId }: TablePageProps) {
         </div>
       </div>
       <Footer />
+      <CallStaffButton onCallStaff={handleCallStaff} />
       <ReceiptButton onReceiptOpen={handleReceiptOpen} />
       <CartButton 
         onCartOpen={handleCartOpen}
@@ -350,9 +391,20 @@ function TablePage({ tableId }: TablePageProps) {
         tableId={tableId}
         cartItems={cartItems}
       />
+      <CallStaffModal 
+        isOpen={isCallStaffModalOpen}
+        onClose={handleCallStaffModalClose}
+        onSubmit={handleCallStaffSubmit}
+        tableId={tableId}
+        isSubmitting={isCallStaffSubmitting}
+      />
       <OrderSuccessMessage 
         isVisible={showOrderSuccess}
         onComplete={handleOrderSuccessComplete}
+      />
+      <CallStaffSuccessMessage 
+        isVisible={showCallStaffSuccess}
+        onComplete={handleCallStaffSuccessComplete}
       />
     </div>
   );
