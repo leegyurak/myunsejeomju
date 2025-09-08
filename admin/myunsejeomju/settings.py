@@ -1,5 +1,4 @@
 import os
-import sys
 from pathlib import Path
 from dotenv import load_dotenv
 import pymysql
@@ -10,9 +9,7 @@ pymysql.install_as_MySQLdb()
 # Load environment variables
 load_dotenv()
 
-# Add backend to Python path
-backend_path = Path(__file__).resolve().parent.parent.parent / 'backend'
-sys.path.insert(0, str(backend_path))
+# Backend path no longer needed as we use managed=False models
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -33,7 +30,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'infrastructure.database.apps.DatabaseConfig',
     'admin_app.apps.AdminAppConfig',
 ]
 

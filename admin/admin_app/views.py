@@ -8,7 +8,7 @@ from django.db.models import Q, Sum, Count
 from django.utils import timezone
 from datetime import timedelta
 
-from infrastructure.database.models import (
+from .models import (
     FoodModel, TableModel, OrderModel,
     PaymentDepositModel
 )
