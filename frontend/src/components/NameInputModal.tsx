@@ -116,7 +116,7 @@ const NameInputModal: React.FC<NameInputModalProps> = ({
     }
   };
 
-  const banks = ['신한', '우리', '하나', '카카오뱅크'];
+  const banks = ['우리', '하나', '카카오뱅크'];
 
   return (
     <>

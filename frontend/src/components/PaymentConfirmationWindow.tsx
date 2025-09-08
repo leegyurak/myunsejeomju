@@ -39,7 +39,6 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
     const bankDeepLinks: { [key: string]: string } = {
       '하나': 'hanapush://REMITM',
       '카카오뱅크': 'kakaobank://duduk',
-      '신한': 'https://sol.shinhan.com/sup/common/callSupInstallService.jsp',
       '우리': 'wooribank://remit'
     };
 
@@ -128,8 +127,8 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
     setIsCheckingPayment(true);
     
     try {
-      // 5초 로딩 대기
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      // 7초 로딩 대기
+      await new Promise(resolve => setTimeout(resolve, 7000));
       
       // 결제 상태 확인
       const paymentStatus = await apiService.checkPaymentStatus(orderId);
@@ -266,7 +265,7 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
                   border: '1px solid #1e40af',
                   padding: '8px 16px',
                   borderRadius: '8px',
-                  fontSize: '14px',
+                  fontSize: '12px',
                   cursor: 'pointer',
                   textDecoration: 'none'
                 }}
