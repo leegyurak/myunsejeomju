@@ -27,7 +27,7 @@ interface TablePageProps {
 
 function TablePage({ tableId }: TablePageProps) {
   const location = useLocation();
-  const [activeCategory, setActiveCategory] = useState<string>('menu');
+  const [activeCategory, setActiveCategory] = useState<string>('main');
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState<boolean>(false);
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [isFoodDetailOpen, setIsFoodDetailOpen] = useState<boolean>(false);
@@ -40,16 +40,16 @@ function TablePage({ tableId }: TablePageProps) {
   const [foods, setFoods] = useState<FoodItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
-  const menuSectionRef = useRef<HTMLDivElement>(null);
-  const drinksSectionRef = useRef<HTMLDivElement>(null);
+  const mainSectionRef = useRef<HTMLDivElement>(null);
+  const sideSectionRef = useRef<HTMLDivElement>(null);
   const isScrollingRef = useRef<boolean>(false);
 
-  const menuFoods: FoodItem[] = foods.filter(
-    (food) => food.category === 'menu'
+  const mainFoods: FoodItem[] = foods.filter(
+    (food) => food.category === 'main'
   );
   
-  const drinksFoods: FoodItem[] = foods.filter(
-    (food) => food.category === 'drinks'
+  const sideFoods: FoodItem[] = foods.filter(
+    (food) => food.category === 'side'
   );
 
   useEffect(() => {
@@ -120,19 +120,19 @@ function TablePage({ tableId }: TablePageProps) {
     const handleScroll = () => {
       if (isScrollingRef.current) return;
       
-      const menuSection = menuSectionRef.current;
-      const drinksSection = drinksSectionRef.current;
+      const mainSection = mainSectionRef.current;
+      const sideSection = sideSectionRef.current;
       
-      if (!menuSection || !drinksSection) return;
+      if (!mainSection || !sideSection) return;
       
-      const menuRect = menuSection.getBoundingClientRect();
-      const drinksRect = drinksSection.getBoundingClientRect();
+      const mainRect = mainSection.getBoundingClientRect();
+      const sideRect = sideSection.getBoundingClientRect();
       const threshold = 200;
       
-      if (menuRect.top <= threshold && menuRect.bottom > threshold) {
-        setActiveCategory('menu');
-      } else if (drinksRect.top <= threshold && drinksRect.bottom > threshold) {
-        setActiveCategory('drinks');
+      if (mainRect.top <= threshold && mainRect.bottom > threshold) {
+        setActiveCategory('main');
+      } else if (sideRect.top <= threshold && sideRect.bottom > threshold) {
+        setActiveCategory('side');
       }
     };
 
@@ -144,7 +144,7 @@ function TablePage({ tableId }: TablePageProps) {
     isScrollingRef.current = true;
     setActiveCategory(category);
     
-    const targetRef = category === 'menu' ? menuSectionRef : drinksSectionRef;
+    const targetRef = category === 'main' ? mainSectionRef : sideSectionRef;
     const targetElement = targetRef.current;
     
     if (targetElement) {
@@ -299,17 +299,17 @@ function TablePage({ tableId }: TablePageProps) {
       />
       <Notice />
       <div className="content-sections">
-        <div ref={menuSectionRef} className="category-section" data-category="menu">
-          <h2 className="section-title">메뉴</h2>
+        <div ref={mainSectionRef} className="category-section" data-category="main">
+          <h2 className="section-title">메인</h2>
           <FoodGrid 
-            foods={menuFoods} 
+            foods={mainFoods} 
             onFoodClick={handleFoodClick}
           />
         </div>
-        <div ref={drinksSectionRef} className="category-section" data-category="drinks">
-          <h2 className="section-title">주류/음료</h2>
+        <div ref={sideSectionRef} className="category-section" data-category="side">
+          <h2 className="section-title">사이드</h2>
           <FoodGrid 
-            foods={drinksFoods} 
+            foods={sideFoods} 
             onFoodClick={handleFoodClick}
           />
         </div>

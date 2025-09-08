@@ -7,8 +7,8 @@ interface CategoryTabsProps {
 
 const CategoryTabs: React.FC<CategoryTabsProps> = ({ activeCategory, onCategoryChange }) => {
   const categories = [
-    { id: 'menu', name: '메뉴' },
-    { id: 'drinks', name: '주류/음료' }
+    { id: 'main', name: '메인' },
+    { id: 'side', name: '사이드' }
   ];
 
   return (

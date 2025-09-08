@@ -3,7 +3,7 @@ export interface FoodItem {
   name: string;
   description: string;
   price: number;
-  category: 'menu' | 'drinks';
+  category: 'main' | 'side';
   image: string;
   soldOut: boolean;
 }
