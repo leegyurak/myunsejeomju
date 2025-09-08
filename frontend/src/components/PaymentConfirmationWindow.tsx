@@ -63,9 +63,30 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
           console.log('Bank payment detected:', paymentMethod, 'Using deep link:', deepLink);
           setRedirectUrl(deepLink);
           
-          // Open bank app in new tab after 1.5 seconds
+          // Open bank app after 1.5 seconds with multiple fallback methods
           setTimeout(() => {
-            window.open(deepLink, '_blank');
+            console.log('Attempting to open deep link:', deepLink);
+            
+            // Method 1: Try window.open first
+            const newWindow = window.open(deepLink, '_blank');
+            
+            // Method 2: If window.open fails, try direct location change
+            if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+              console.log('window.open failed, trying location.href');
+              window.location.href = deepLink;
+            }
+            
+            // Method 3: Create invisible iframe as fallback for deep links
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = deepLink;
+            document.body.appendChild(iframe);
+            
+            // Remove iframe after a short delay
+            setTimeout(() => {
+              document.body.removeChild(iframe);
+            }, 100);
+            
           }, 1500);
         } else {
           // For Toss payments, use API redirect URL
@@ -208,14 +229,35 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
                 color: '#8e8e93',
                 margin: '0 0 8px 0'
               }}>
-                결제 페이지가 자동으로 열리지 않는 경우:
+                {paymentMethod ? `${paymentMethod} 앱이 자동으로 열리지 않는 경우:` : '결제 페이지가 자동으로 열리지 않는 경우:'}
               </p>
               <button
                 onClick={() => {
-                  if (isMobile) {
-                    window.location.href = redirectUrl;
+                  console.log('Manual button clicked for:', paymentMethod || 'Toss', redirectUrl);
+                  
+                  // Try multiple methods for deep links
+                  if (paymentMethod) {
+                    // For bank apps, try iframe method first
+                    const iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    iframe.src = redirectUrl;
+                    document.body.appendChild(iframe);
+                    
+                    setTimeout(() => {
+                      document.body.removeChild(iframe);
+                    }, 100);
+                    
+                    // Also try window.location as fallback
+                    setTimeout(() => {
+                      window.location.href = redirectUrl;
+                    }, 500);
                   } else {
-                    window.open(redirectUrl, '_blank');
+                    // For Toss, use normal window.open
+                    if (isMobile) {
+                      window.location.href = redirectUrl;
+                    } else {
+                      window.open(redirectUrl, '_blank');
+                    }
                   }
                 }}
                 style={{
@@ -229,7 +271,7 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
                   textDecoration: 'none'
                 }}
               >
-                결제 페이지로 이동
+                {paymentMethod ? `${paymentMethod} 앱으로 이동` : '결제 페이지로 이동'}
               </button>
             </div>
           )}
