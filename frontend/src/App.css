@@ -1325,6 +1325,16 @@ body::after {
   gap: 8px;
 }
 
+.name-input-buttons .cancel-button {
+  background-color: #FEE500;
+  color: #191600;
+  font-size: 14px;
+}
+
+.name-input-buttons .cancel-button:hover:not(:disabled) {
+  background-color: #F5D800;
+}
+
 .cancel-button {
   background-color: #3498db;
   color: white;
@@ -2157,4 +2167,88 @@ body::after {
   color: #8e8e93;
   font-weight: 500;
   line-height: 1.4;
+}
+
+/* Main Menu Required Modal */
+.main-menu-required-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  background: white;
+  border-radius: 20px;
+  padding: 0;
+  z-index: 1010;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.main-menu-required-modal.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.main-menu-required-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 20px 0 20px;
+}
+
+.main-menu-required-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1c1c1e;
+  margin: 0;
+}
+
+.main-menu-required-content {
+  padding: 20px;
+  text-align: center;
+}
+
+.main-menu-required-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.main-menu-required-message {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1c1c1e;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.main-menu-required-submessage {
+  font-size: 12px;
+  color: #8e8e93;
+  line-height: 1.4;
+  margin-bottom: 0;
+}
+
+.main-menu-required-buttons {
+  padding: 0 20px 20px 20px;
+}
+
+.main-menu-required-button {
+  width: 100%;
+  padding: 14px 20px;
+  background-color: #1e40af;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.main-menu-required-button:hover {
+  background-color: #1d4ed8;
 }

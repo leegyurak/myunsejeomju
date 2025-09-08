@@ -21,7 +21,6 @@ const NameInputModal: React.FC<NameInputModalProps> = ({
   cartItems
 }) => {
   const [name, setName] = useState('');
-  const [showBankSelection, setShowBankSelection] = useState(false);
 
   useEffect(() => {
     // Listen for messages from payment confirmation window
@@ -73,22 +72,17 @@ const NameInputModal: React.FC<NameInputModalProps> = ({
   const handleClose = () => {
     if (!isSubmitting) {
       setName('');
-      setShowBankSelection(false);
       onClose();
     }
   };
 
-  const handleBankAppPayment = () => {
-    setShowBankSelection(true);
-  };
-
-  const handleBankSelect = (bankName: string) => {
+  const handleKakaoPayPayment = () => {
     if (name.trim()) {
       // Store cart items in sessionStorage for payment confirmation window
       sessionStorage.setItem('paymentCartItems', JSON.stringify(cartItems));
       
-      // Open payment confirmation window with selected bank info
-      const confirmationUrl = `/payment-confirmation/${tableId}?payer_name=${encodeURIComponent(name.trim())}&total_amount=${totalAmount}&payment_method=${encodeURIComponent(bankName)}`;
+      // Open payment confirmation window with KakaoPay method
+      const confirmationUrl = `/payment-confirmation/${tableId}?payer_name=${encodeURIComponent(name.trim())}&total_amount=${totalAmount}&payment_method=kakaopay`;
       
       // Check if it's mobile device
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -109,14 +103,10 @@ const NameInputModal: React.FC<NameInputModalProps> = ({
 
       if (!newWindow) {
         alert('팝업이 차단되었습니다. 팝업을 허용해주세요.');
-      } else {
-        // Close bank selection after opening payment window
-        setShowBankSelection(false);
       }
     }
   };
 
-  const banks = ['우리', '하나', '카카오뱅크'];
 
   return (
     <>
@@ -153,50 +143,23 @@ const NameInputModal: React.FC<NameInputModalProps> = ({
             </p>
           </div>
           
-          {!showBankSelection ? (
-            <div className="name-input-buttons">
-              <button 
-                type="button" 
-                className="cancel-button"
-                onClick={handleBankAppPayment}
-                disabled={!name.trim() || isSubmitting}
-              >
-                은행앱으로 결제하기
-              </button>
-              <button 
-                type="submit" 
-                className="confirm-button"
-                disabled={!name.trim() || isSubmitting}
-              >
-                토스로 결제하기
-              </button>
-            </div>
-          ) : (
-            <div className="bank-selection">
-              <h3>은행앱을 선택해주세요</h3>
-              <div className="bank-buttons">
-                {banks.map((bank) => (
-                  <button
-                    key={bank}
-                    type="button"
-                    className="bank-button"
-                    onClick={() => handleBankSelect(bank)}
-                    disabled={isSubmitting}
-                  >
-                    {bank}
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                className="back-button"
-                onClick={() => setShowBankSelection(false)}
-                disabled={isSubmitting}
-              >
-                뒤로가기
-              </button>
-            </div>
-          )}
+          <div className="name-input-buttons">
+            <button 
+              type="button" 
+              className="cancel-button"
+              onClick={handleKakaoPayPayment}
+              disabled={!name.trim() || isSubmitting}
+            >
+              카카오페이로 결제하기
+            </button>
+            <button 
+              type="submit" 
+              className="confirm-button"
+              disabled={!name.trim() || isSubmitting}
+            >
+              토스로 결제하기
+            </button>
+          </div>
         </form>
       </div>
     </>

@@ -56,8 +56,24 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
         console.log('Pre-order API response:', response);
         setOrderId(response.order_id);
         
+        // If payment method is KakaoPay, use KakaoPay link
+        if (paymentMethod === 'kakaopay') {
+          const kakaoPayUrl = 'https://link.kakaopay.com/t/money/to/bank?bank_code=089&bank_account_number=100148347666';
+          console.log('KakaoPay payment detected, using URL:', kakaoPayUrl);
+          setRedirectUrl(kakaoPayUrl);
+          
+          // Open KakaoPay link after 1.5 seconds
+          setTimeout(() => {
+            console.log('Opening KakaoPay link:', kakaoPayUrl);
+            if (isMobile) {
+              window.location.href = kakaoPayUrl;
+            } else {
+              window.open(kakaoPayUrl, '_blank');
+            }
+          }, 1500);
+        }
         // If payment method is a bank, use deep link
-        if (paymentMethod && bankDeepLinks[paymentMethod]) {
+        else if (paymentMethod && bankDeepLinks[paymentMethod]) {
           const deepLink = bankDeepLinks[paymentMethod];
           console.log('Bank payment detected:', paymentMethod, 'Using deep link:', deepLink);
           setRedirectUrl(deepLink);
@@ -190,7 +206,7 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
           marginBottom: '16px',
           margin: '0 0 16px 0'
         }}>
-          {paymentMethod ? `${paymentMethod} 결제 완료 확인` : '결제 완료 확인'}
+          {paymentMethod && paymentMethod !== 'kakaopay' ? `${paymentMethod} 결제 완료 확인` : '결제 완료 확인'}
         </h2>
         
         <div style={{
@@ -228,14 +244,22 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
                 color: '#8e8e93',
                 margin: '0 0 8px 0'
               }}>
-                {paymentMethod ? `${paymentMethod} 앱이 자동으로 열리지 않는 경우:` : '결제 페이지가 자동으로 열리지 않는 경우:'}
+                {paymentMethod && paymentMethod !== 'kakaopay' ? `${paymentMethod} 앱이 자동으로 열리지 않는 경우:` : '결제 페이지가 자동으로 열리지 않는 경우:'}
               </p>
               <button
                 onClick={() => {
                   console.log('Manual button clicked for:', paymentMethod || 'Toss', redirectUrl);
                   
-                  // Try multiple methods for deep links
-                  if (paymentMethod) {
+                  // Handle KakaoPay
+                  if (paymentMethod === 'kakaopay') {
+                    if (isMobile) {
+                      window.location.href = redirectUrl;
+                    } else {
+                      window.open(redirectUrl, '_blank');
+                    }
+                  }
+                  // Try multiple methods for deep links (bank apps)
+                  else if (paymentMethod && paymentMethod !== 'kakaopay') {
                     // For bank apps, try iframe method first
                     const iframe = document.createElement('iframe');
                     iframe.style.display = 'none';
@@ -270,7 +294,7 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
                   textDecoration: 'none'
                 }}
               >
-                {paymentMethod ? `${paymentMethod} 앱으로 이동` : '결제 페이지로 이동'}
+                {paymentMethod && paymentMethod !== 'kakaopay' ? `${paymentMethod} 앱으로 이동` : '결제 페이지로 이동'}
               </button>
             </div>
           )}

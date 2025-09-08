@@ -15,6 +15,7 @@ import CartModal from './components/CartModal';
 import ReceiptModal from './components/ReceiptModal';
 import OrderSuccessMessage from './components/OrderSuccessMessage';
 import NameInputModal from './components/NameInputModal';
+import MainMenuRequiredModal from './components/MainMenuRequiredModal';
 import PaymentConfirmationWindow from './components/PaymentConfirmationWindow';
 import PaymentResultPage from './components/PaymentResultPage';
 import PaymentSuccessPage from './components/PaymentSuccessPage';
@@ -39,6 +40,7 @@ function TablePage({ tableId }: TablePageProps) {
   const [isFoodDetailOpen, setIsFoodDetailOpen] = useState<boolean>(false);
   const [isCartModalOpen, setIsCartModalOpen] = useState<boolean>(false);
   const [isNameInputModalOpen, setIsNameInputModalOpen] = useState<boolean>(false);
+  const [isMainMenuRequiredModalOpen, setIsMainMenuRequiredModalOpen] = useState<boolean>(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isOrdering, setIsOrdering] = useState<boolean>(false);
   const [showOrderSuccess, setShowOrderSuccess] = useState<boolean>(false);
@@ -239,13 +241,31 @@ function TablePage({ tableId }: TablePageProps) {
     setIsCartModalOpen(false);
   };
 
-  const handleShowNameInput = () => {
+  const handleShowNameInput = async () => {
+    // 최초 주문인지 확인 (orderHistory가 null이거나 orders 배열이 비어있는지 체크)
+    const isFirstOrder = !orderHistory || orderHistory.orders.length === 0;
+    
+    if (isFirstOrder) {
+      // 장바구니에 메인 메뉴가 있는지 확인
+      const hasMainMenu = cartItems.some(item => item.food.category === 'main');
+      
+      if (!hasMainMenu) {
+        // 사이드 메뉴만 있을 때 에러 모달 표시
+        setIsMainMenuRequiredModalOpen(true);
+        return;
+      }
+    }
+    
     setIsCartModalOpen(false);
     setIsNameInputModalOpen(true);
   };
 
   const handleNameInputClose = () => {
     setIsNameInputModalOpen(false);
+  };
+
+  const handleMainMenuRequiredClose = () => {
+    setIsMainMenuRequiredModalOpen(false);
   };
 
   const handleUpdateQuantity = (foodId: number, quantity: number) => {
@@ -390,6 +410,10 @@ function TablePage({ tableId }: TablePageProps) {
         totalAmount={cartTotalAmount}
         tableId={tableId}
         cartItems={cartItems}
+      />
+      <MainMenuRequiredModal 
+        isOpen={isMainMenuRequiredModalOpen}
+        onClose={handleMainMenuRequiredClose}
       />
       <CallStaffModal 
         isOpen={isCallStaffModalOpen}
