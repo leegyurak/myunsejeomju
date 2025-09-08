@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, useParams, Navigate, useLocation } from 'react-router-dom';
 import './App.css';
 import Header from './components/Header';
+import Notice from './components/Notice';
 import FoodGrid from './components/FoodGrid';
 import Footer from './components/Footer';
 import CartButton from './components/CartButton';
@@ -308,6 +309,7 @@ function TablePage({ tableId }: TablePageProps) {
         activeCategory={activeCategory}
         onCategoryChange={handleCategoryChange}
       />
+      <Notice />
       <div className="content-sections">
         <div ref={menuSectionRef} className="category-section" data-category="menu">
           <h2 className="section-title">메뉴</h2>

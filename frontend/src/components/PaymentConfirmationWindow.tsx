@@ -23,6 +23,10 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
   const [orderId, setOrderId] = useState<string>('');
   const [showIncompleteMessage, setShowIncompleteMessage] = useState(false);
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
+  
+  // Get payment method from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const paymentMethod = urlParams.get('payment_method');
 
   // 모바일 환경 감지 (useMemo로 메모이제이션)
   const isMobile = useMemo(() => 
@@ -31,7 +35,32 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
   );
 
   useEffect(() => {
-    // Call pre-order API in background when component mounts
+    // Bank deep link mapping
+    const bankDeepLinks: { [key: string]: string } = {
+      '하나': 'hanapush://REMITM',
+      '카카오뱅크': 'kakaobank://duduk',
+      '신한': 'https://sol.shinhan.com/sup/common/callSupInstallService.jsp',
+      '우리': 'wooribank://remit'
+    };
+
+    // If payment method is a bank, use deep link instead of API
+    if (paymentMethod && bankDeepLinks[paymentMethod]) {
+      const deepLink = bankDeepLinks[paymentMethod];
+      console.log('Bank payment detected:', paymentMethod, 'Using deep link:', deepLink);
+      
+      // Set a mock order ID for bank payments (you can generate a proper one or modify API)
+      setOrderId(`bank_${Date.now()}`);
+      setRedirectUrl(deepLink);
+      
+      // Open bank app in new tab after 1.5 seconds
+      setTimeout(() => {
+        window.open(deepLink, '_blank');
+      }, 1500);
+      
+      return;
+    }
+
+    // Call pre-order API for Toss payments
     const callPreOrderAPI = async () => {
       try {
         // Convert cartItems to API format
@@ -47,20 +76,11 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
         setOrderId(response.order_id);
         
         if (response.redirect_url) {
-          // Automatically open payment page after API response
-          if (isMobile) {
-            // 모바일에서는 직접 리다이렉트
-            console.log('Mobile detected: Redirecting directly to payment page:', response.redirect_url);
-            window.location.href = response.redirect_url;
-          } else {
-            // 데스크톱에서는 새 창에서 열기
-            console.log('Desktop detected: Opening payment page in new window:', response.redirect_url);
-            const paymentWindow = window.open(response.redirect_url, '_blank');
-            
-            if (!paymentWindow) {
-              alert('팝업이 차단되었습니다. 팝업을 허용하고 수동으로 결제 페이지로 이동해주세요.');
-            }
-          }
+          // Open Toss payment in new tab after 1.5 seconds
+          setTimeout(() => {
+            console.log('Opening Toss payment page in new tab:', response.redirect_url);
+            window.open(response.redirect_url, '_blank');
+          }, 1500);
         } else {
           console.error('No redirect URL received from API');
           alert('결제 페이지 URL을 받지 못했습니다. 다시 시도해주세요.');
@@ -73,7 +93,7 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
     };
 
     callPreOrderAPI();
-  }, [tableId, payerName, totalAmount, cartItems, isMobile]);
+  }, [tableId, payerName, totalAmount, cartItems, isMobile, paymentMethod]);
 
   // 로딩 상태 제거 - 바로 결제 완료 확인 UI 표시
 
@@ -153,7 +173,7 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
           marginBottom: '16px',
           margin: '0 0 16px 0'
         }}>
-          결제 완료 확인
+          {paymentMethod ? `${paymentMethod} 결제 완료 확인` : '결제 완료 확인'}
         </h2>
         
         <div style={{
