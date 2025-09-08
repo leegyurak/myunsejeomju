@@ -1,7 +1,7 @@
 import { FoodItem } from '../types/food';
 import { OrderHistory } from '../types/order';
 
-const API_BASE_URL = 'https://api.myunsejujeom.shop/api';
+const API_BASE_URL = 'https://api.myunsejeomju.shop/api';
 
 interface Table {
   id: string;
