@@ -7,7 +7,7 @@ interface CallStaffButtonProps {
 const CallStaffButton: React.FC<CallStaffButtonProps> = ({ onCallStaff }) => {
   return (
     <button className="call-staff-button" onClick={onCallStaff}>
-      직원호출
+      <span>직원<br/>호출</span>
     </button>
   );
 };
