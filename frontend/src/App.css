@@ -1331,6 +1331,12 @@ body::after {
   font-size: 14px;
 }
 
+@media (max-width: 450px) and (min-width: 375px) {
+  .name-input-buttons .cancel-button {
+    font-size: 12px;
+  }
+}
+
 .name-input-buttons .cancel-button:hover:not(:disabled) {
   background-color: #F5D800;
 }

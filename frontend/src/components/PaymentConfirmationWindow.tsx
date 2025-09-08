@@ -108,10 +108,14 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
           setRedirectUrl(response.redirect_url);
           
           if (response.redirect_url) {
-            // Open Toss payment in new tab after 1.5 seconds
+            // Open Toss payment after 1.5 seconds
             setTimeout(() => {
-              console.log('Opening Toss payment page in new tab:', response.redirect_url);
-              window.open(response.redirect_url, '_blank');
+              console.log('Opening Toss payment page:', response.redirect_url);
+              if (isMobile) {
+                window.location.href = response.redirect_url;
+              } else {
+                window.open(response.redirect_url, '_blank');
+              }
             }, 1500);
           } else {
             console.error('No redirect URL received from API');
