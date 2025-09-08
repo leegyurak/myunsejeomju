@@ -105,6 +105,76 @@ class DiscordNotificationService:
             logger.error(f"Discord 알림 전송 중 예상치 못한 오류: {str(e)}")
             return False
     
+    def send_staff_call_notification(self, table_id: str, message: str = None) -> bool:
+        """
+        직원호출 알림을 Discord로 전송합니다.
+        
+        Args:
+            table_id: 테이블 ID
+            message: 고객 메시지 (선택적)
+        
+        Returns:
+            bool: 전송 성공 여부
+        """
+        if not hasattr(settings, 'DISCORD_CALL_WEBHOOK_URL') or not settings.DISCORD_CALL_WEBHOOK_URL:
+            logger.warning("Discord call webhook URL이 설정되지 않았습니다.")
+            return False
+        
+        try:
+            # 기본 메시지 구성
+            notification_message = f"{table_id}번 테이블에서 직원을 호출하였습니다!"
+            if message:
+                notification_message += f" 메시지: {message}"
+            
+            embed = {
+                "title": "🔔 직원 호출",
+                "description": notification_message,
+                "color": 0xff9900,  # 주황색
+                "fields": [
+                    {
+                        "name": "테이블",
+                        "value": f"{table_id}번",
+                        "inline": True
+                    }
+                ],
+                "timestamp": datetime.now().isoformat(),
+                "footer": {
+                    "text": "숭실대축제 주문 시스템"
+                }
+            }
+            
+            if message:
+                embed["fields"].append({
+                    "name": "고객 메시지",
+                    "value": message,
+                    "inline": False
+                })
+            
+            payload = {
+                "embeds": [embed],
+                "username": "직원호출 알리미"
+            }
+            
+            response = requests.post(
+                settings.DISCORD_CALL_WEBHOOK_URL,
+                json=payload,
+                timeout=10
+            )
+            
+            if response.status_code == 204:
+                logger.info(f"Discord 직원호출 알림 전송 성공: 테이블 {table_id}")
+                return True
+            else:
+                logger.error(f"Discord 직원호출 알림 전송 실패: {response.status_code} - {response.text}")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Discord 직원호출 알림 전송 중 네트워크 오류: {str(e)}")
+            return False
+        except Exception as e:
+            logger.error(f"Discord 직원호출 알림 전송 중 예상치 못한 오류: {str(e)}")
+            return False
+
     def send_custom_notification(self, title: str, message: str, color: int = 0x0099ff) -> bool:
         """
         커스텀 알림을 Discord로 전송합니다.

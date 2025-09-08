@@ -431,3 +431,42 @@ def reset_table_orders(request, table_id):
             {'error': 'Internal server error'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['POST'])
+def call_staff(request, table_id):
+    """
+    특정 테이블에서 직원을 호출합니다.
+    Discord 웹훅을 통해 직원호출 알림을 전송합니다.
+    """
+    try:
+        # 테이블이 존재하는지 확인
+        table = get_table_by_id_use_case.execute(table_id)
+        if not table:
+            return Response(
+                {'error': 'Table not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # 요청에서 메시지 추출 (선택적)
+        message = request.data.get('message', '') if request.data else ''
+        
+        # Discord 알림 전송
+        success = discord_service.send_staff_call_notification(table_id, message)
+        
+        if success:
+            return Response(
+                {'message': f'Staff call notification sent for table {table_id}'}, 
+                status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {'error': 'Failed to send staff call notification'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    except Exception as e:
+        return Response(
+            {'error': 'Internal server error'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

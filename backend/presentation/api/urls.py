@@ -27,4 +27,7 @@ urlpatterns = [
     
     # Reset table orders
     path('tables/<str:table_id>/orders/reset/', views.reset_table_orders, name='reset-table-orders'),
+    
+    # Staff call
+    path('tables/<str:table_id>/call-staff/', views.call_staff, name='call-staff'),
 ]

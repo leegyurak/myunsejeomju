@@ -3,9 +3,10 @@ Integration tests for table API endpoints.
 """
 import pytest
 import json
+from unittest.mock import patch
 from rest_framework.test import APIClient
 from rest_framework import status
-from django.test import TransactionTestCase
+from django.test import TransactionTestCase, override_settings
 
 from tests.factories.model_factories import TableModelFactory, OrderModelFactory
 
@@ -206,3 +207,92 @@ class TestTableAPIEndpoints(TransactionTestCase):
         
         response_data = response.json()
         assert response_data == []
+
+    @pytest.mark.django_db(transaction=True)
+    @override_settings(DISCORD_CALL_WEBHOOK_URL="https://discord.com/api/webhooks/test")
+    @patch('infrastructure.external.discord_service.requests.post')
+    def test_call_staff_success(self, mock_post):
+        """테이블에서 직원 호출을 성공적으로 할 수 있다."""
+        # Given
+        mock_post.return_value.status_code = 204
+        table = TableModelFactory(name="테이블1")
+        
+        # When
+        response = self.client.post(f'/api/tables/{table.id}/call-staff/', {
+            'message': '물 한 잔 부탁드립니다'
+        }, format='json')
+        
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        
+        response_data = response.json()
+        assert 'message' in response_data
+        assert 'Staff call notification sent' in response_data['message']
+        assert str(table.id) in response_data['message']
+        
+        # Discord 서비스 호출 확인
+        mock_post.assert_called_once()
+
+    @pytest.mark.django_db(transaction=True) 
+    @override_settings(DISCORD_CALL_WEBHOOK_URL="https://discord.com/api/webhooks/test")
+    @patch('infrastructure.external.discord_service.requests.post')
+    def test_call_staff_without_message(self, mock_post):
+        """메시지 없이도 직원 호출을 할 수 있다."""
+        # Given
+        mock_post.return_value.status_code = 204
+        table = TableModelFactory(name="테이블2")
+        
+        # When
+        response = self.client.post(f'/api/tables/{table.id}/call-staff/')
+        
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        
+        response_data = response.json()
+        assert 'message' in response_data
+        assert 'Staff call notification sent' in response_data['message']
+        
+        # Discord 서비스 호출 확인
+        mock_post.assert_called_once()
+
+    @pytest.mark.django_db(transaction=True)
+    def test_call_staff_table_not_found(self):
+        """존재하지 않는 테이블에서 직원 호출 시 404 오류를 반환한다."""
+        # Given
+        non_existent_id = "00000000-0000-0000-0000-000000000000"
+        
+        # When
+        response = self.client.post(f'/api/tables/{non_existent_id}/call-staff/', {
+            'message': '직원 호출'
+        }, format='json')
+        
+        # Then
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        
+        response_data = response.json()
+        assert 'error' in response_data
+        assert 'Table not found' in response_data['error']
+
+    @pytest.mark.django_db(transaction=True)
+    @override_settings(DISCORD_CALL_WEBHOOK_URL="https://discord.com/api/webhooks/test")
+    @patch('infrastructure.external.discord_service.requests.post')
+    def test_call_staff_with_empty_message(self, mock_post):
+        """빈 메시지로도 직원 호출을 할 수 있다."""
+        # Given
+        mock_post.return_value.status_code = 204
+        table = TableModelFactory(name="테이블3")
+        
+        # When
+        response = self.client.post(f'/api/tables/{table.id}/call-staff/', {
+            'message': ''
+        }, format='json')
+        
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+        
+        response_data = response.json()
+        assert 'message' in response_data
+        assert 'Staff call notification sent' in response_data['message']
+        
+        # Discord 서비스 호출 확인
+        mock_post.assert_called_once()

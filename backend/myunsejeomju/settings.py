@@ -169,3 +169,4 @@ CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,
 
 # Discord settings
 DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL', '')
+DISCORD_CALL_WEBHOOK_URL = os.getenv('DISCORD_CALL_WEBHOOK_URL', '')
