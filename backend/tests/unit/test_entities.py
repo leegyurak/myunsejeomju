@@ -363,3 +363,82 @@ class TestOrder:
         
         # Then
         assert order.discord_notified is True
+    
+    def test_order_total_amount_with_effective_total_amount(self):
+        """effective_total_amount가 설정된 경우 해당 값을 우선 사용한다."""
+        # Given
+        table = TableFactory()
+        food = FoodFactory(price=10000)
+        order_item = OrderItem(food=food, quantity=3, price=10000)
+        
+        order = Order(
+            id="order-123",
+            table=table,
+            order_date=timezone.now(),
+            items=[order_item],
+            effective_total_amount=25000  # items total(30000)과 다른 값
+        )
+        
+        # When & Then
+        assert order.total_amount == 25000  # effective_total_amount를 우선 사용
+    
+    def test_order_total_amount_priority_order(self):
+        """총액 계산 우선순위가 올바르게 작동한다."""
+        # Given
+        table = TableFactory()
+        food = FoodFactory(price=10000)
+        order_item = OrderItem(food=food, quantity=2, price=10000)
+        minus_item = MinusOrderItem(food=food, quantity=-1, price=10000, reason="sold_out")
+        
+        # effective_total_amount가 최우선
+        order_with_effective = Order(
+            id="order-1",
+            table=table,
+            order_date=timezone.now(),
+            items=[order_item],
+            minus_items=[minus_item],
+            pre_order_amount=50000,
+            effective_total_amount=15000
+        )
+        
+        # pre_order_amount가 두 번째 우선순위
+        order_with_pre_order = Order(
+            id="order-2",
+            table=table,
+            order_date=timezone.now(),
+            items=[order_item],
+            minus_items=[minus_item],
+            pre_order_amount=40000
+        )
+        
+        # items 기반 계산이 마지막 우선순위
+        order_with_items_only = Order(
+            id="order-3",
+            table=table,
+            order_date=timezone.now(),
+            items=[order_item]
+        )
+        
+        # When & Then
+        assert order_with_effective.total_amount == 15000  # effective_total_amount 사용
+        assert order_with_pre_order.total_amount == 40000  # pre_order_amount 사용
+        assert order_with_items_only.total_amount == 20000  # items 기반 계산 (2 * 10000)
+    
+    def test_order_with_effective_total_amount_none(self):
+        """effective_total_amount가 None인 경우 기존 로직을 사용한다."""
+        # Given
+        table = TableFactory()
+        food = FoodFactory(price=10000)
+        order_item = OrderItem(food=food, quantity=2, price=10000)
+        
+        order = Order(
+            id="order-123",
+            table=table,
+            order_date=timezone.now(),
+            items=[order_item],
+            effective_total_amount=None,
+            pre_order_amount=30000
+        )
+        
+        # When & Then
+        assert order.total_amount == 30000  # pre_order_amount 사용

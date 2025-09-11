@@ -287,24 +287,39 @@ class DjangoOrderRepository(OrderRepository):
             updated_at=order_model.table.updated_at
         )
         
-        # Convert order items
+        # Convert order items, adjusting quantities based on minus order items
         items = []
+        
+        # Create a mapping of food_id to total minus quantity
+        minus_quantities = {}
+        for minus_item in order_model.minus_items.all():
+            food_id = minus_item.food.id
+            # minus_item.quantity는 음수이므로 절댓값을 사용
+            minus_quantities[food_id] = minus_quantities.get(food_id, 0) + abs(minus_item.quantity)
+        
         for item_model in order_model.items.all():
-            # Convert food directly from model to avoid circular dependency
-            food = Food(
-                id=item_model.food.id,
-                name=item_model.food.name,
-                price=item_model.food.price,
-                category=FoodCategory(item_model.food.category),
-                description=item_model.food.description,
-                image=item_model.food.image,
-                sold_out=item_model.food.sold_out
-            )
-            items.append(OrderItem(
-                food=food,
-                quantity=item_model.quantity,
-                price=item_model.price
-            ))
+            # Calculate the effective quantity after subtracting minus items
+            original_quantity = item_model.quantity
+            minus_quantity = minus_quantities.get(item_model.food.id, 0)
+            effective_quantity = original_quantity - minus_quantity
+            
+            # Only include the item if the effective quantity is positive
+            if effective_quantity > 0:
+                # Convert food directly from model to avoid circular dependency
+                food = Food(
+                    id=item_model.food.id,
+                    name=item_model.food.name,
+                    price=item_model.food.price,
+                    category=FoodCategory(item_model.food.category),
+                    description=item_model.food.description,
+                    image=item_model.food.image,
+                    sold_out=item_model.food.sold_out
+                )
+                items.append(OrderItem(
+                    food=food,
+                    quantity=effective_quantity,
+                    price=item_model.price
+                ))
         
         # Convert minus order items
         minus_items = []
@@ -326,6 +341,11 @@ class DjangoOrderRepository(OrderRepository):
                 reason=minus_item_model.reason
             ))
         
+        # Calculate effective total amount after minus items adjustment
+        effective_total = None
+        if order_model.status != 'pre_order' or order_model.pre_order_amount is None:
+            effective_total = sum(item.total_price for item in items)
+        
         return Order(
             id=str(order_model.id),
             table=table,
@@ -336,5 +356,6 @@ class DjangoOrderRepository(OrderRepository):
             pre_order_amount=order_model.pre_order_amount,
             minus_items=minus_items if minus_items else None,
             is_visible=order_model.is_visible,
-            discord_notified=order_model.discord_notified
+            discord_notified=order_model.discord_notified,
+            effective_total_amount=effective_total
         )

@@ -288,3 +288,152 @@ class TestDjangoOrderRepository:
         assert result is True
         order_model.refresh_from_db()
         assert order_model.discord_notified is True
+    
+    def test_order_items_filtering_with_minus_items(self):
+        """minus order items가 있는 경우 해당 order items가 제외된다."""
+        # Given
+        table_model = TableModelFactory()
+        food1 = FoodModelFactory(name="음식1", price=10000)
+        food2 = FoodModelFactory(name="음식2", price=15000)
+        food3 = FoodModelFactory(name="음식3", price=8000)
+        
+        order_model = OrderModelFactory(table=table_model)
+        
+        # Order items 생성
+        OrderItemModelFactory(order=order_model, food=food1, quantity=2, price=10000)  # 20,000원
+        OrderItemModelFactory(order=order_model, food=food2, quantity=1, price=15000)  # 15,000원
+        OrderItemModelFactory(order=order_model, food=food3, quantity=3, price=8000)   # 24,000원
+        
+        # Minus order items 생성 (food1과 food3에 대해)
+        from tests.factories.model_factories import MinusOrderItemModelFactory
+        MinusOrderItemModelFactory(order=order_model, food=food1, quantity=-1, price=10000, reason='sold_out')  # -10,000원
+        MinusOrderItemModelFactory(order=order_model, food=food3, quantity=-3, price=8000, reason='unavailable')  # -24,000원
+        
+        repository = DjangoOrderRepository()
+        
+        # When
+        order = repository.get_by_id(str(order_model.id))
+        
+        # Then
+        assert order is not None
+        assert len(order.items) == 2  # food1(수량1개), food2(수량1개)만 남아야 함
+        
+        # food1: 원래 2개 - 1개 = 1개 남음
+        food1_item = next((item for item in order.items if item.food.id == food1.id), None)
+        assert food1_item is not None
+        assert food1_item.quantity == 1
+        
+        # food2: 차감 없음, 그대로 1개
+        food2_item = next((item for item in order.items if item.food.id == food2.id), None)
+        assert food2_item is not None
+        assert food2_item.quantity == 1
+        
+        # food3: 원래 3개 - 3개 = 0개, 제외됨
+        food3_item = next((item for item in order.items if item.food.id == food3.id), None)
+        assert food3_item is None
+    
+    def test_total_amount_calculation_with_minus_items(self):
+        """minus order items가 있는 경우 총액이 올바르게 계산된다."""
+        # Given
+        table_model = TableModelFactory()
+        food1 = FoodModelFactory(name="음식1", price=10000)
+        food2 = FoodModelFactory(name="음식2", price=15000)
+        
+        order_model = OrderModelFactory(table=table_model, status='completed', pre_order_amount=None)
+        
+        # Order items: 총 35,000원
+        OrderItemModelFactory(order=order_model, food=food1, quantity=2, price=10000)  # 20,000원
+        OrderItemModelFactory(order=order_model, food=food2, quantity=1, price=15000)  # 15,000원
+        
+        # Minus order items: -10,000원 차감
+        from tests.factories.model_factories import MinusOrderItemModelFactory
+        MinusOrderItemModelFactory(order=order_model, food=food1, quantity=-1, price=10000, reason='sold_out')
+        
+        repository = DjangoOrderRepository()
+        
+        # When
+        order = repository.get_by_id(str(order_model.id))
+        
+        # Then
+        # 예상 총액: food1(1개 * 10,000원) + food2(1개 * 15,000원) = 25,000원
+        assert order.total_amount == 25000
+        assert order.effective_total_amount == 25000
+    
+    def test_pre_order_total_amount_not_affected_by_minus_items(self):
+        """pre-order의 경우 minus items가 있어도 pre_order_amount를 사용한다."""
+        # Given
+        table_model = TableModelFactory()
+        food1 = FoodModelFactory(name="음식1", price=10000)
+        
+        order_model = OrderModelFactory(
+            table=table_model, 
+            status='pre_order', 
+            pre_order_amount=50000
+        )
+        
+        # Order items와 minus order items 생성
+        OrderItemModelFactory(order=order_model, food=food1, quantity=2, price=10000)
+        from tests.factories.model_factories import MinusOrderItemModelFactory
+        MinusOrderItemModelFactory(order=order_model, food=food1, quantity=-1, price=10000, reason='sold_out')
+        
+        repository = DjangoOrderRepository()
+        
+        # When
+        order = repository.get_by_id(str(order_model.id))
+        
+        # Then
+        # pre-order의 경우 pre_order_amount 사용
+        assert order.total_amount == 50000
+        assert order.effective_total_amount is None  # pre-order는 effective_total_amount 계산 안 함
+    
+    def test_order_items_partial_quantity_reduction(self):
+        """minus order items로 수량이 부분적으로 차감되는 경우."""
+        # Given
+        table_model = TableModelFactory()
+        food1 = FoodModelFactory(name="음식1", price=10000)
+        
+        order_model = OrderModelFactory(table=table_model, status='completed', pre_order_amount=None)
+        
+        # Order items: 5개
+        OrderItemModelFactory(order=order_model, food=food1, quantity=5, price=10000)
+        
+        # Minus order items: 2개 차감
+        from tests.factories.model_factories import MinusOrderItemModelFactory
+        MinusOrderItemModelFactory(order=order_model, food=food1, quantity=-2, price=10000, reason='damaged')
+        
+        repository = DjangoOrderRepository()
+        
+        # When
+        order = repository.get_by_id(str(order_model.id))
+        
+        # Then
+        assert len(order.items) == 1
+        assert order.items[0].quantity == 3  # 5 - 2 = 3
+        assert order.total_amount == 30000  # 3 * 10,000원
+    
+    def test_multiple_minus_items_for_same_food(self):
+        """같은 음식에 대해 여러 minus order items가 있는 경우."""
+        # Given
+        table_model = TableModelFactory()
+        food1 = FoodModelFactory(name="음식1", price=10000)
+        
+        order_model = OrderModelFactory(table=table_model, status='completed', pre_order_amount=None)
+        
+        # Order items: 10개
+        OrderItemModelFactory(order=order_model, food=food1, quantity=10, price=10000)
+        
+        # 여러 minus order items: 총 6개 차감
+        from tests.factories.model_factories import MinusOrderItemModelFactory
+        MinusOrderItemModelFactory(order=order_model, food=food1, quantity=-3, price=10000, reason='sold_out')
+        MinusOrderItemModelFactory(order=order_model, food=food1, quantity=-2, price=10000, reason='damaged')
+        MinusOrderItemModelFactory(order=order_model, food=food1, quantity=-1, price=10000, reason='unavailable')
+        
+        repository = DjangoOrderRepository()
+        
+        # When
+        order = repository.get_by_id(str(order_model.id))
+        
+        # Then
+        assert len(order.items) == 1
+        assert order.items[0].quantity == 4  # 10 - (3+2+1) = 4
+        assert order.total_amount == 40000  # 4 * 10,000원

@@ -41,14 +41,21 @@ class Order:
     pre_order_amount: Optional[int] = None  # pre-order용 총 금액
     is_visible: bool = True
     discord_notified: bool = False
+    effective_total_amount: Optional[int] = None  # Repository에서 계산된 차감 후 총액
     
     @property
     def total_amount(self) -> int:
+        # Repository에서 계산된 차감 후 총액이 있는 경우 사용
+        if self.effective_total_amount is not None:
+            return self.effective_total_amount
+            
         # pre_order_amount가 있는 경우 (pre-order에서 completed로 변경된 주문 포함) 사용
         if self.pre_order_amount is not None:
             return self.pre_order_amount
         
         # 일반 주문인 경우 items 기반 계산
+        # Repository에서 오지 않은 경우(effective_total_amount가 None), 
+        # 기존 로직을 사용해 items + minus_items로 계산
         items_total = sum(item.total_price for item in self.items)
         minus_total = sum(minus_item.total_price for minus_item in (self.minus_items or []))
         return items_total + minus_total  # minus_total은 이미 음수
