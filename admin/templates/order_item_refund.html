@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}메뉴 환불 처리 - 면세점주 관리자{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1><i class="fas fa-undo me-2"></i>메뉴 환불 처리</h1>
+        <p class="text-muted mb-0">{{ table.name|default:table.id }} 테이블 - 주문번호: {{ order.id|stringformat:"s"|slice:":8" }}...</p>
+    </div>
+    <a href="{% url 'admin_app:table_orders' table.pk %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>주문 목록으로
+    </a>
+</div>
+
+<!-- 환불 대상 메뉴 정보 -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">환불 대상 메뉴</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <h6 class="text-muted">메뉴명</h6>
+                <p class="mb-0"><strong>{{ order_item.food.name }}</strong></p>
+            </div>
+            <div class="col-md-2">
+                <h6 class="text-muted">단가</h6>
+                <p class="mb-0">₩{{ order_item.price|floatformat:0 }}</p>
+            </div>
+            <div class="col-md-2">
+                <h6 class="text-muted">주문 수량</h6>
+                <p class="mb-0">{{ order_item.quantity }}개</p>
+            </div>
+            <div class="col-md-2">
+                <h6 class="text-muted">이미 환불됨</h6>
+                <p class="mb-0">
+                    {% if already_refunded > 0 %}
+                        <span class="badge bg-warning">{{ already_refunded }}개</span>
+                    {% else %}
+                        <span class="badge bg-secondary">0개</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-3">
+                <h6 class="text-muted">환불 가능 수량</h6>
+                <p class="mb-0">
+                    {% if available_for_refund > 0 %}
+                        <span class="badge bg-success fs-6">{{ available_for_refund }}개</span>
+                    {% else %}
+                        <span class="badge bg-danger fs-6">환불 불가</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if available_for_refund > 0 %}
+    <!-- 환불 처리 폼 -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">환불 수량 선택</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" onsubmit="return confirm('정말로 환불 처리하시겠습니까?');">
+                {% csrf_token %}
+                <div class="row align-items-end">
+                    <div class="col-md-3">
+                        <label for="refund_quantity" class="form-label">환불 수량</label>
+                        <select class="form-select" id="refund_quantity" name="refund_quantity" required>
+                            {% for i in available_for_refund|add:"1"|make_list %}
+                                {% if forloop.counter <= available_for_refund %}
+                                    <option value="{{ forloop.counter }}">{{ forloop.counter }}개</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">환불 금액</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₩</span>
+                            <input type="text" class="form-control" id="refund_amount" readonly value="{{ order_item.price|floatformat:0 }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-undo me-1"></i>환불 처리
+                            </button>
+                            <a href="{% url 'admin_app:table_orders' table.pk %}" class="btn btn-outline-secondary">
+                                취소
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% else %}
+    <!-- 환불 불가 안내 -->
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+            <h5>환불 가능한 수량이 없습니다</h5>
+            <p class="text-muted mb-4">이 메뉴는 이미 모든 수량이 환불 처리되었습니다.</p>
+            <a href="{% url 'admin_app:table_orders' table.pk %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-1"></i>주문 목록으로 돌아가기
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quantitySelect = document.getElementById('refund_quantity');
+    const amountInput = document.getElementById('refund_amount');
+    const unitPrice = {{ order_item.price }};
+    
+    if (quantitySelect && amountInput) {
+        quantitySelect.addEventListener('change', function() {
+            const quantity = parseInt(this.value);
+            const totalAmount = unitPrice * quantity;
+            amountInput.value = totalAmount.toLocaleString();
+        });
+    }
+});
+</script>
+{% endblock %}

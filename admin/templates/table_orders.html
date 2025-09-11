@@ -86,6 +86,8 @@
                                         <span class="badge bg-success">{{ order.get_status_display }}</span>
                                     {% elif order.status == 'pre_order' %}
                                         <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'refunded' %}
+                                        <span class="badge bg-danger">{{ order.get_status_display }}</span>
                                     {% else %}
                                         <span class="badge bg-secondary">{{ order.get_status_display }}</span>
                                     {% endif %}
@@ -101,11 +103,25 @@
                                     {% if order.items.exists %}
                                         <ul class="list-unstyled mb-0">
                                             {% for item in order.items.all %}
-                                                <li>
-                                                    <small>
-                                                        {{ item.food.name }} x{{ item.quantity }}
-                                                        <span class="text-muted">(₩{{ item.total_price|floatformat:0 }})</span>
-                                                    </small>
+                                                <li class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="{% if item.is_fully_refunded %}text-decoration-line-through text-muted{% endif %}">
+                                                        <small>
+                                                            {{ item.food.name }} x{{ item.quantity }}
+                                                            <span class="text-muted">(₩{{ item.total_price|floatformat:0 }})</span>
+                                                            {% if item.is_fully_refunded %}
+                                                                <span class="badge bg-danger ms-1">환불완료</span>
+                                                            {% elif item.is_partially_refunded %}
+                                                                <span class="badge bg-warning ms-1">부분환불</span>
+                                                            {% endif %}
+                                                        </small>
+                                                    </span>
+                                                    {% if order.status == 'completed' and not item.is_fully_refunded %}
+                                                        <a href="{% url 'admin_app:order_item_refund' order.pk item.pk %}" 
+                                                           class="btn btn-outline-warning btn-sm ms-2" 
+                                                           title="환불 처리">
+                                                            <i class="fas fa-undo"></i>
+                                                        </a>
+                                                    {% endif %}
                                                 </li>
                                             {% endfor %}
                                         </ul>
@@ -120,6 +136,12 @@
                                                class="btn btn-outline-success" 
                                                title="선주문 완료 처리">
                                                 <i class="fas fa-check"></i> 완료
+                                            </a>
+                                        {% elif order.status == 'completed' and order.has_refundable_items %}
+                                            <a href="{% url 'admin_app:order_full_refund' order.pk %}" 
+                                               class="btn btn-outline-warning" 
+                                               title="주문 전체 환불">
+                                                <i class="fas fa-undo-alt"></i> 전체환불
                                             </a>
                                         {% endif %}
                                         <a href="{% url 'admin_app:order_hard_delete' order.pk %}" 

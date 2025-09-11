@@ -42,12 +42,21 @@ class TableModel(models.Model):
     
     def __str__(self):
         return f"{self.name}"
+    
+    def get_active_revenue(self):
+        """활성 주문의 총 매출 (환불 금액 반영)"""
+        active_orders = self.ordermodel_set.filter(is_visible=True)
+        total = 0
+        for order in active_orders:
+            total += order.total_amount
+        return total
 
 
 class OrderModel(models.Model):
     STATUS_CHOICES = [
         ('pre_order', 'Pre Order'),
         ('completed', 'Completed'),
+        ('refunded', 'Refunded'),
     ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name='주문 ID')
@@ -81,6 +90,18 @@ class OrderModel(models.Model):
         items_total = sum(item.total_price for item in self.items.all())
         minus_total = sum(minus_item.total_price for minus_item in self.minus_items.all())
         return items_total + minus_total
+    
+    def has_refundable_items(self):
+        """환불 가능한 아이템이 있는지 확인"""
+        if self.status != 'completed':
+            return False
+        
+        if not self.items.exists():
+            # 선주문인 경우 - 아직 환불되지 않았으면 환불 가능
+            return self.status != 'refunded' and (self.pre_order_amount or 0) > 0
+        
+        # 일반 주문인 경우 - 환불 가능한 아이템이 하나라도 있으면 환불 가능
+        return any(not item.is_fully_refunded() for item in self.items.all())
 
 
 class OrderItemModel(models.Model):
@@ -101,6 +122,29 @@ class OrderItemModel(models.Model):
     @property
     def total_price(self):
         return self.price * self.quantity
+    
+    def get_refunded_quantity(self):
+        """이 아이템이 환불된 수량을 반환"""
+        from django.db import models
+        refunded = MinusOrderItemModel.objects.filter(
+            order=self.order,
+            food=self.food,
+            reason='refund'
+        ).aggregate(total=models.Sum('quantity'))['total'] or 0
+        return abs(refunded)
+    
+    def get_available_quantity(self):
+        """환불 가능한 수량을 반환"""
+        return self.quantity - self.get_refunded_quantity()
+    
+    def is_fully_refunded(self):
+        """완전히 환불되었는지 확인"""
+        return self.get_available_quantity() <= 0
+    
+    def is_partially_refunded(self):
+        """부분적으로 환불되었는지 확인"""
+        refunded = self.get_refunded_quantity()
+        return refunded > 0 and refunded < self.quantity
 
 
 class MinusOrderItemModel(models.Model):
@@ -108,6 +152,7 @@ class MinusOrderItemModel(models.Model):
         ('sold_out', 'Sold Out'),
         ('unavailable', 'Unavailable'),
         ('damaged', 'Damaged'),
+        ('refund', 'Refund'),
     ]
     
     order = models.ForeignKey(OrderModel, related_name='minus_items', on_delete=models.CASCADE)

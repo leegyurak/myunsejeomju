@@ -22,6 +22,8 @@ urlpatterns = [
     path('tables/<str:pk>/checkout/', views.table_checkout, name='table_checkout'),
     path('orders/<str:order_id>/delete/', views.order_hard_delete, name='order_hard_delete'),
     path('orders/<str:order_id>/complete/', views.order_complete, name='order_complete'),
+    path('orders/<str:order_id>/items/<int:item_id>/refund/', views.order_item_refund, name='order_item_refund'),
+    path('orders/<str:order_id>/full-refund/', views.order_full_refund, name='order_full_refund'),
     
     # Payment deposits - 입금 관리
     path('payments/', views.payment_list, name='payment_list'),

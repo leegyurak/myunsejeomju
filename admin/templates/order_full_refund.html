@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}주문 전체 환불 처리 - 면세점주 관리자{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1><i class="fas fa-undo-alt me-2"></i>주문 전체 환불 처리</h1>
+        <p class="text-muted mb-0">{{ table.name|default:table.id }} 테이블 - 주문번호: {{ order.id|stringformat:"s"|slice:":8" }}...</p>
+    </div>
+    <a href="{% url 'admin_app:table_orders' table.pk %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>주문 목록으로
+    </a>
+</div>
+
+<!-- 주문 정보 -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">주문 정보</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <h6 class="text-muted">주문번호</h6>
+                <p class="mb-0"><code>{{ order.id|stringformat:"s"|slice:":8" }}...</code></p>
+            </div>
+            <div class="col-md-3">
+                <h6 class="text-muted">결제자</h6>
+                <p class="mb-0">{{ order.payer_name|default:"미입력" }}</p>
+            </div>
+            <div class="col-md-3">
+                <h6 class="text-muted">주문 상태</h6>
+                <p class="mb-0">
+                    {% if order.status == 'completed' %}
+                        <span class="badge bg-success">{{ order.get_status_display }}</span>
+                    {% elif order.status == 'pre_order' %}
+                        <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                    {% elif order.status == 'refunded' %}
+                        <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-3">
+                <h6 class="text-muted">주문일시</h6>
+                <p class="mb-0">{{ order.order_date|date:"Y-m-d H:i" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if has_refundable_items %}
+    <!-- 환불 대상 내역 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">환불 대상 내역</h5>
+        </div>
+        <div class="card-body">
+            {% if is_pre_order %}
+                <!-- 선주문인 경우 -->
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    이 주문은 선주문입니다. 전체 금액이 환불됩니다.
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">선주문 금액</h6>
+                        <p class="mb-0"><strong class="text-primary">₩{{ refundable_amount|floatformat:0 }}</strong></p>
+                    </div>
+                </div>
+            {% else %}
+                <!-- 일반 주문인 경우 -->
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>메뉴명</th>
+                                <th>단가</th>
+                                <th>환불 수량</th>
+                                <th>환불 금액</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for refund_item in refundable_items %}
+                                <tr>
+                                    <td>{{ refund_item.item.food.name }}</td>
+                                    <td>₩{{ refund_item.item.price|floatformat:0 }}</td>
+                                    <td>{{ refund_item.available_quantity }}개</td>
+                                    <td><strong>₩{{ refund_item.refund_amount|floatformat:0 }}</strong></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-dark">
+                            <tr>
+                                <th colspan="3">총 환불 금액</th>
+                                <th><strong class="text-warning">₩{{ refundable_amount|floatformat:0 }}</strong></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 환불 처리 확인 -->
+    <div class="card">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>환불 처리 확인</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <strong>주의:</strong> 이 작업은 되돌릴 수 없습니다. 주문의 모든 항목이 환불 처리됩니다.
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>환불 처리 내용:</h6>
+                    <ul class="mb-3">
+                        {% if is_pre_order %}
+                            <li>선주문 전체 금액 환불</li>
+                            <li>주문 상태를 "환불됨"으로 변경</li>
+                        {% else %}
+                            <li>모든 메뉴 아이템을 환불 처리</li>
+                            <li>환불 내역이 Minus Order Item에 저장됨</li>
+                        {% endif %}
+                        <li>총 환불 금액: <strong class="text-danger">₩{{ refundable_amount|floatformat:0 }}</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+            <form method="post" onsubmit="return confirm('정말로 이 주문을 전체 환불 처리하시겠습니까? 이 작업은 되돌릴 수 없습니다.');">
+                {% csrf_token %}
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-undo-alt me-1"></i>전체 환불 처리
+                    </button>
+                    <a href="{% url 'admin_app:table_orders' table.pk %}" class="btn btn-outline-secondary">
+                        취소
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+{% else %}
+    <!-- 환불 불가 안내 -->
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+            <h5>환불 가능한 항목이 없습니다</h5>
+            {% if order.status == 'refunded' %}
+                <p class="text-muted mb-4">이 주문은 이미 환불 처리되었습니다.</p>
+            {% elif order.status != 'completed' %}
+                <p class="text-muted mb-4">완료된 주문만 환불 처리할 수 있습니다.</p>
+            {% else %}
+                <p class="text-muted mb-4">모든 항목이 이미 환불 처리되었습니다.</p>
+            {% endif %}
+            <a href="{% url 'admin_app:table_orders' table.pk %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-1"></i>주문 목록으로 돌아가기
+            </a>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

@@ -10,8 +10,8 @@ from datetime import timedelta
 
 from .discord import DiscordNotificationService
 from .models import (
-    FoodModel, TableModel, OrderModel,
-    PaymentDepositModel
+    FoodModel, TableModel, OrderModel, OrderItemModel,
+    MinusOrderItemModel, PaymentDepositModel
 )
 
 
@@ -48,24 +48,33 @@ def admin_logout(request):
 @login_required
 def dashboard(request):
     """대시보드 메인 페이지"""
-    # 통계 데이터 수집
-    total_orders = OrderModel.objects.exclude(status='pre_order').count()
+    # 통계 데이터 수집 (환불된 주문 제외)
+    total_orders = OrderModel.objects.exclude(status='pre_order').exclude(status='refunded').count()
     total_foods = FoodModel.objects.count()
     total_tables = TableModel.objects.count()
     
-    # 오늘 주문 수
+    # 오늘 주문 수 (환불된 주문 제외)
     today = timezone.now().date()
-    today_orders = OrderModel.objects.filter(order_date__date=today).exclude(status='pre_order').count()
+    today_orders = OrderModel.objects.filter(order_date__date=today).exclude(status='pre_order').exclude(status='refunded').count()
     
-    # 총 매출 (pre-order 제외)
-    total_revenue = OrderModel.objects.exclude(status='pre_order').aggregate(
-        revenue=Sum('pre_order_amount')
-    )['revenue'] or 0
+    # 총 매출 (pre-order 제외, 환불 금액 반영)
+    completed_orders = OrderModel.objects.exclude(status='pre_order').exclude(status='refunded')
+    total_revenue = 0
+    for order in completed_orders:
+        total_revenue += order.total_amount
     
-    # 최근 주문 5개 (pre-order 제외)
-    recent_orders = OrderModel.objects.select_related('table').exclude(
+    # 최근 주문 5개 (pre-order, refunded, 0원 주문 제외)
+    recent_orders_queryset = OrderModel.objects.select_related('table').exclude(
         status='pre_order'
-    ).order_by('-order_date')[:5]
+    ).exclude(status='refunded').order_by('-order_date')
+    
+    # 0원이 아닌 주문만 필터링
+    recent_orders = []
+    for order in recent_orders_queryset:
+        if order.total_amount > 0:
+            recent_orders.append(order)
+            if len(recent_orders) >= 5:
+                break
     
     # 인기 메뉴 5개
     popular_foods = FoodModel.objects.annotate(
@@ -172,8 +181,7 @@ def table_list(request):
     search = request.GET.get('search', '')
     
     tables = TableModel.objects.annotate(
-        active_order_count=Count('ordermodel', filter=Q(ordermodel__is_visible=True)),
-        total_revenue=Sum('ordermodel__pre_order_amount', filter=Q(ordermodel__is_visible=True))
+        active_order_count=Count('ordermodel', filter=Q(ordermodel__is_visible=True))
     )
     
     if search:
@@ -202,14 +210,16 @@ def table_orders(request, pk):
     orders = OrderModel.objects.filter(
         table=table,
         is_visible=True
-    ).select_related('table').prefetch_related('items__food').order_by('-order_date')
+    ).select_related('table').prefetch_related('items__food', 'minus_items__food').order_by('-order_date')
     
     paginator = Paginator(orders, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # 총 매출 계산
-    total_revenue = orders.aggregate(Sum('pre_order_amount'))['pre_order_amount__sum'] or 0
+    # 총 매출 계산 (환불 금액 반영)
+    total_revenue = 0
+    for order in orders:
+        total_revenue += order.total_amount
     
     context = {
         'table': table,
@@ -242,9 +252,12 @@ def table_checkout(request, pk):
     
     # 활성 주문 수 확인
     active_orders_count = OrderModel.objects.filter(table=table, is_visible=True).count()
-    total_amount = OrderModel.objects.filter(
-        table=table, is_visible=True
-    ).aggregate(Sum('pre_order_amount'))['pre_order_amount__sum'] or 0
+    
+    # 총 금액 계산 (환불 금액 반영)
+    active_orders = OrderModel.objects.filter(table=table, is_visible=True)
+    total_amount = 0
+    for order in active_orders:
+        total_amount += order.total_amount
     
     context = {
         'table': table,
@@ -364,11 +377,16 @@ def api_stats(request):
     """통계 API"""
     today = timezone.now().date()
     
+    # 총 매출 (환불 금액 반영)
+    completed_orders = OrderModel.objects.exclude(status='pre_order').exclude(status='refunded')
+    total_revenue = 0
+    for order in completed_orders:
+        total_revenue += order.total_amount
+    
     stats = {
-        'total_orders': OrderModel.objects.exclude(status='pre_order').count(),
-        'today_orders': OrderModel.objects.filter(order_date__date=today).exclude(status='pre_order').count(),
-        'total_revenue': OrderModel.objects.exclude(status='pre_order').aggregate(
-            Sum('pre_order_amount'))['pre_order_amount__sum'] or 0,
+        'total_orders': OrderModel.objects.exclude(status='pre_order').exclude(status='refunded').count(),
+        'today_orders': OrderModel.objects.filter(order_date__date=today).exclude(status='pre_order').exclude(status='refunded').count(),
+        'total_revenue': total_revenue,
         'active_tables': TableModel.objects.count(),
         'sold_out_foods': FoodModel.objects.filter(sold_out=True).count(),
     }
@@ -381,3 +399,165 @@ def api_food_list(request):
     """음식 목록 API"""
     foods = FoodModel.objects.values('id', 'name', 'price', 'category', 'sold_out')
     return JsonResponse(list(foods), safe=False)
+
+
+@login_required
+def order_item_refund(request, order_id, item_id):
+    """주문 아이템 환불 처리"""
+    order = get_object_or_404(OrderModel, pk=order_id)
+    order_item = get_object_or_404(OrderItemModel, pk=item_id, order=order)
+    
+    if request.method == 'POST':
+        refund_quantity = int(request.POST.get('refund_quantity', 1))
+        
+        # 환불 수량 검증
+        if refund_quantity <= 0 or refund_quantity > order_item.quantity:
+            messages.error(request, '올바르지 않은 환불 수량입니다.')
+            return redirect('admin_app:table_orders', pk=order.table.pk)
+        
+        # 이미 환불된 수량 확인
+        already_refunded = MinusOrderItemModel.objects.filter(
+            order=order,
+            food=order_item.food,
+            reason='refund'
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+        
+        # 음수로 저장되므로 절댓값으로 계산
+        already_refunded = abs(already_refunded)
+        
+        if already_refunded + refund_quantity > order_item.quantity:
+            messages.error(request, f'환불 가능한 수량을 초과했습니다. (이미 환불됨: {already_refunded}개)')
+            return redirect('admin_app:table_orders', pk=order.table.pk)
+        
+        # MinusOrderItem 생성 (환불 처리)
+        MinusOrderItemModel.objects.create(
+            order=order,
+            food=order_item.food,
+            quantity=-refund_quantity,  # 음수로 저장
+            price=order_item.price,
+            reason='refund'
+        )
+        
+        messages.success(request, f'{order_item.food.name} {refund_quantity}개가 환불 처리되었습니다.')
+        return redirect('admin_app:table_orders', pk=order.table.pk)
+    
+    # GET 요청일 때 - 이미 환불된 수량 확인
+    already_refunded = MinusOrderItemModel.objects.filter(
+        order=order,
+        food=order_item.food,
+        reason='refund'
+    ).aggregate(total=Sum('quantity'))['total'] or 0
+    
+    already_refunded = abs(already_refunded)
+    available_for_refund = order_item.quantity - already_refunded
+    
+    context = {
+        'order': order,
+        'order_item': order_item,
+        'already_refunded': already_refunded,
+        'available_for_refund': available_for_refund,
+        'table': order.table,
+    }
+    
+    return render(request, 'order_item_refund.html', context)
+
+
+@login_required
+def order_full_refund(request, order_id):
+    """주문 전체 환불 처리"""
+    order = get_object_or_404(OrderModel, pk=order_id)
+    
+    if request.method == 'POST':
+        # 이미 환불 처리된 주문인지 확인
+        if order.status != 'completed':
+            messages.error(request, '완료된 주문만 환불 처리할 수 있습니다.')
+            return redirect('admin_app:table_orders', pk=order.table.pk)
+        
+        # 선주문인 경우와 일반 주문인 경우 구분
+        if not order.items.exists():
+            # 선주문인 경우 - pre_order_amount 전체를 환불
+            if order.pre_order_amount and order.pre_order_amount > 0:
+                # 가상의 "선주문" 항목으로 MinusOrderItem 생성
+                # 선주문의 경우 특별한 처리가 필요하므로, 주문 상태를 변경하는 방식 사용
+                order.status = 'refunded'  # 새로운 상태 추가 필요
+                order.save()
+                
+                messages.success(request, f'선주문 ₩{order.pre_order_amount:,}이 전체 환불 처리되었습니다.')
+            else:
+                messages.error(request, '환불할 금액이 없습니다.')
+        else:
+            # 일반 주문인 경우 - 모든 아이템을 MinusOrderItem으로 생성
+            refunded_count = 0
+            total_refund_amount = 0
+            
+            for item in order.items.all():
+                # 이미 환불된 수량 확인
+                already_refunded = MinusOrderItemModel.objects.filter(
+                    order=order,
+                    food=item.food,
+                    reason='refund'
+                ).aggregate(total=Sum('quantity'))['total'] or 0
+                
+                already_refunded = abs(already_refunded)
+                available_for_refund = item.quantity - already_refunded
+                
+                if available_for_refund > 0:
+                    # 남은 수량 전체 환불
+                    MinusOrderItemModel.objects.create(
+                        order=order,
+                        food=item.food,
+                        quantity=-available_for_refund,  # 음수로 저장
+                        price=item.price,
+                        reason='refund'
+                    )
+                    refunded_count += available_for_refund
+                    total_refund_amount += item.price * available_for_refund
+            
+            if refunded_count > 0:
+                messages.success(request, f'주문 전체가 환불 처리되었습니다. (총 {refunded_count}개 아이템, ₩{total_refund_amount:,})')
+            else:
+                messages.warning(request, '환불 가능한 아이템이 없습니다. (이미 모든 아이템이 환불 처리됨)')
+        
+        return redirect('admin_app:table_orders', pk=order.table.pk)
+    
+    # GET 요청일 때 - 환불 가능한 아이템 및 금액 계산
+    if not order.items.exists():
+        # 선주문인 경우
+        refundable_amount = order.pre_order_amount or 0
+        refundable_items = []
+        is_pre_order = True
+    else:
+        # 일반 주문인 경우
+        refundable_items = []
+        refundable_amount = 0
+        is_pre_order = False
+        
+        for item in order.items.all():
+            already_refunded = MinusOrderItemModel.objects.filter(
+                order=order,
+                food=item.food,
+                reason='refund'
+            ).aggregate(total=Sum('quantity'))['total'] or 0
+            
+            already_refunded = abs(already_refunded)
+            available_for_refund = item.quantity - already_refunded
+            
+            if available_for_refund > 0:
+                item_refund_amount = item.price * available_for_refund
+                refundable_items.append({
+                    'item': item,
+                    'available_quantity': available_for_refund,
+                    'refund_amount': item_refund_amount
+                })
+                refundable_amount += item_refund_amount
+    
+    context = {
+        'order': order,
+        'table': order.table,
+        'refundable_items': refundable_items,
+        'refundable_amount': refundable_amount,
+        'is_pre_order': is_pre_order,
+        'has_refundable_items': len(refundable_items) > 0 or (is_pre_order and refundable_amount > 0),
+    }
+    
+    return render(request, 'order_full_refund.html', context)

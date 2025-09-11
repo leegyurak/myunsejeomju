@@ -70,7 +70,7 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <strong>₩{{ table.total_revenue|default:0|floatformat:0 }}</strong>
+                                    <strong>₩{{ table.get_active_revenue|floatformat:0 }}</strong>
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm" role="group">
