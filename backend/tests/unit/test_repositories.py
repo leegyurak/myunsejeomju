@@ -182,8 +182,13 @@ class TestDjangoOrderRepository:
     def test_get_all_visible_orders(self):
         """표시 가능한 모든 주문을 조회할 수 있다."""
         # Given
+        food = FoodModelFactory(price=10000)
         visible_order = OrderModelFactory(is_visible=True)
+        OrderItemModelFactory(order=visible_order, food=food, quantity=1, price=10000)
+        
         hidden_order = OrderModelFactory(is_visible=False)
+        OrderItemModelFactory(order=hidden_order, food=food, quantity=1, price=10000)
+        
         repository = DjangoOrderRepository()
         
         # When
@@ -258,11 +263,19 @@ class TestDjangoOrderRepository:
     def test_get_orders_by_table_id(self):
         """테이블 ID로 주문들을 조회할 수 있다."""
         # Given
+        food = FoodModelFactory(price=10000)
         table1 = TableModelFactory()
         table2 = TableModelFactory()
+        
         order1 = OrderModelFactory(table=table1, is_visible=True)
+        OrderItemModelFactory(order=order1, food=food, quantity=1, price=10000)
+        
         order2 = OrderModelFactory(table=table1, is_visible=True)
+        OrderItemModelFactory(order=order2, food=food, quantity=2, price=10000)
+        
         order3 = OrderModelFactory(table=table2, is_visible=True)
+        OrderItemModelFactory(order=order3, food=food, quantity=1, price=10000)
+        
         repository = DjangoOrderRepository()
         
         # When
@@ -437,3 +450,117 @@ class TestDjangoOrderRepository:
         assert len(order.items) == 1
         assert order.items[0].quantity == 4  # 10 - (3+2+1) = 4
         assert order.total_amount == 40000  # 4 * 10,000원
+    
+    def test_zero_amount_orders_excluded_from_get_all(self):
+        """총액이 0원인 주문은 get_all에서 제외된다."""
+        # Given
+        table_model = TableModelFactory()
+        food1 = FoodModelFactory(name="음식1", price=10000)
+        
+        # 정상 주문
+        normal_order = OrderModelFactory(table=table_model, is_visible=True)
+        OrderItemModelFactory(order=normal_order, food=food1, quantity=2, price=10000)
+        
+        # 0원 주문 (완전히 차감된 주문)
+        zero_order = OrderModelFactory(table=table_model, is_visible=True)
+        OrderItemModelFactory(order=zero_order, food=food1, quantity=3, price=10000)
+        from tests.factories.model_factories import MinusOrderItemModelFactory
+        MinusOrderItemModelFactory(order=zero_order, food=food1, quantity=-3, price=10000, reason='sold_out')
+        
+        repository = DjangoOrderRepository()
+        
+        # When
+        orders = repository.get_all()
+        
+        # Then
+        assert len(orders) == 1  # 0원 주문은 제외되고 정상 주문만 반환
+        assert orders[0].id == str(normal_order.id)
+        assert orders[0].total_amount > 0
+    
+    def test_zero_amount_orders_excluded_from_get_by_table_id(self):
+        """총액이 0원인 주문은 get_by_table_id에서 제외된다."""
+        # Given
+        table_model = TableModelFactory()
+        food1 = FoodModelFactory(name="음식1", price=10000)
+        
+        # 정상 주문
+        normal_order = OrderModelFactory(table=table_model, is_visible=True)
+        OrderItemModelFactory(order=normal_order, food=food1, quantity=2, price=10000)
+        
+        # 0원 주문
+        zero_order = OrderModelFactory(table=table_model, is_visible=True)
+        OrderItemModelFactory(order=zero_order, food=food1, quantity=1, price=10000)
+        from tests.factories.model_factories import MinusOrderItemModelFactory
+        MinusOrderItemModelFactory(order=zero_order, food=food1, quantity=-1, price=10000, reason='unavailable')
+        
+        repository = DjangoOrderRepository()
+        
+        # When
+        orders = repository.get_by_table_id(str(table_model.id))
+        
+        # Then
+        assert len(orders) == 1  # 0원 주문은 제외
+        assert orders[0].id == str(normal_order.id)
+    
+    def test_zero_amount_order_get_by_id_returns_none(self):
+        """총액이 0원인 주문을 get_by_id로 조회하면 None을 반환한다."""
+        # Given
+        table_model = TableModelFactory()
+        food1 = FoodModelFactory(name="음식1", price=10000)
+        
+        # 0원 주문
+        zero_order = OrderModelFactory(table=table_model)
+        OrderItemModelFactory(order=zero_order, food=food1, quantity=2, price=10000)
+        from tests.factories.model_factories import MinusOrderItemModelFactory
+        MinusOrderItemModelFactory(order=zero_order, food=food1, quantity=-2, price=10000, reason='damaged')
+        
+        repository = DjangoOrderRepository()
+        
+        # When
+        order = repository.get_by_id(str(zero_order.id))
+        
+        # Then
+        assert order is None
+    
+    def test_negative_amount_orders_excluded(self):
+        """총액이 음수인 주문도 제외된다."""
+        # Given
+        table_model = TableModelFactory()
+        food1 = FoodModelFactory(name="음식1", price=10000)
+        
+        # 음수 주문 (차감이 원래 주문보다 많은 경우)
+        negative_order = OrderModelFactory(table=table_model, is_visible=True)
+        OrderItemModelFactory(order=negative_order, food=food1, quantity=1, price=10000)
+        from tests.factories.model_factories import MinusOrderItemModelFactory
+        MinusOrderItemModelFactory(order=negative_order, food=food1, quantity=-2, price=10000, reason='sold_out')
+        
+        repository = DjangoOrderRepository()
+        
+        # When
+        orders = repository.get_all()
+        
+        # Then
+        assert len(orders) == 0  # 음수 주문도 제외됨
+    
+    def test_pre_order_zero_amount_handled_correctly(self):
+        """pre-order에서 pre_order_amount가 0인 경우도 제외된다."""
+        # Given
+        table_model = TableModelFactory()
+        food1 = FoodModelFactory(name="음식1", price=10000)
+        
+        # pre-order이지만 총액이 0원
+        zero_pre_order = OrderModelFactory(
+            table=table_model, 
+            is_visible=True,
+            status='pre_order',
+            pre_order_amount=0
+        )
+        OrderItemModelFactory(order=zero_pre_order, food=food1, quantity=1, price=10000)
+        
+        repository = DjangoOrderRepository()
+        
+        # When
+        orders = repository.get_all()
+        
+        # Then
+        assert len(orders) == 0  # pre-order라도 0원이면 제외

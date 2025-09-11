@@ -121,12 +121,21 @@ class TestTableAPIEndpoints(TransactionTestCase):
     def test_get_table_orders_with_orders(self):
         """주문이 있는 테이블의 주문 내역을 조회할 수 있다."""
         # Given
+        from tests.factories.model_factories import FoodModelFactory, OrderItemModelFactory
+        
         table = TableModelFactory()
+        food = FoodModelFactory(price=10000)
+        
         order1 = OrderModelFactory(table=table, is_visible=True)
+        OrderItemModelFactory(order=order1, food=food, quantity=1, price=10000)
+        
         order2 = OrderModelFactory(table=table, is_visible=True)
+        OrderItemModelFactory(order=order2, food=food, quantity=2, price=10000)
+        
         # 다른 테이블의 주문 (결과에 포함되지 않아야 함)
         other_table = TableModelFactory()
         other_order = OrderModelFactory(table=other_table, is_visible=True)
+        OrderItemModelFactory(order=other_order, food=food, quantity=1, price=10000)
         
         # When
         response = self.client.get(f'/api/tables/{table.id}/orders/')
@@ -166,9 +175,16 @@ class TestTableAPIEndpoints(TransactionTestCase):
     def test_reset_table_orders(self):
         """테이블의 주문들을 리셋할 수 있다."""
         # Given
+        from tests.factories.model_factories import FoodModelFactory, OrderItemModelFactory
+        
         table = TableModelFactory()
+        food = FoodModelFactory(price=10000)
+        
         order1 = OrderModelFactory(table=table, is_visible=True)
+        OrderItemModelFactory(order=order1, food=food, quantity=1, price=10000)
+        
         order2 = OrderModelFactory(table=table, is_visible=True)
+        OrderItemModelFactory(order=order2, food=food, quantity=1, price=10000)
         
         # When
         response = self.client.delete(f'/api/tables/{table.id}/orders/reset/')

@@ -118,7 +118,7 @@ class DjangoTableRepository(TableRepository):
 class DjangoOrderRepository(OrderRepository):
     def get_all(self) -> List[Order]:
         orders = OrderModel.objects.filter(is_visible=True)
-        return [self._model_to_entity(order) for order in orders]
+        return [order for order in [self._model_to_entity(order_model) for order_model in orders] if order is not None]
     
     def get_by_id(self, order_id: str) -> Optional[Order]:
         try:
@@ -259,15 +259,15 @@ class DjangoOrderRepository(OrderRepository):
     
     def get_by_table_id(self, table_id: str) -> List[Order]:
         orders = OrderModel.objects.filter(table_id=table_id, is_visible=True)
-        return [self._model_to_entity(order) for order in orders]
+        return [order for order in [self._model_to_entity(order_model) for order_model in orders] if order is not None]
     
     def get_all_including_hidden_by_table_id(self, table_id: str) -> List[Order]:
         orders = OrderModel.objects.filter(table_id=table_id)
-        return [self._model_to_entity(order) for order in orders]
+        return [order for order in [self._model_to_entity(order_model) for order_model in orders] if order is not None]
     
     def get_all_including_hidden(self) -> List[Order]:
         orders = OrderModel.objects.all()
-        return [self._model_to_entity(order) for order in orders]
+        return [order for order in [self._model_to_entity(order_model) for order_model in orders] if order is not None]
     
     def update_discord_notification_status(self, order_id: str, notified: bool) -> bool:
         try:
@@ -346,7 +346,7 @@ class DjangoOrderRepository(OrderRepository):
         if order_model.status != 'pre_order' or order_model.pre_order_amount is None:
             effective_total = sum(item.total_price for item in items)
         
-        return Order(
+        order = Order(
             id=str(order_model.id),
             table=table,
             order_date=order_model.order_date,
@@ -359,3 +359,9 @@ class DjangoOrderRepository(OrderRepository):
             discord_notified=order_model.discord_notified,
             effective_total_amount=effective_total
         )
+        
+        # 총액이 0원인 주문은 None 반환 (API에서 제외)
+        if order.total_amount <= 0:
+            return None
+            
+        return order
