@@ -8,7 +8,7 @@
 - **데이터베이스**: MySQL 8.0
 - **패키지 관리자**: uv (고속 Python 패키지 설치 도구)
 - **아키텍처**: 클린 아키텍처
-- **결제 연동**: Toss Deposit URL + PayAction
+- **결제 연동**: Toss Deposit URL + Kakaopay Deposit URL + PayAction
 - **주문 알림**: Discord 웹훅 알림
 - **컨테이너화**: Docker + Docker Compose
 
