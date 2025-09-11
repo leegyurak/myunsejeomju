@@ -19,7 +19,7 @@ const Notice: React.FC = () => {
         </div>
         <div className="notice-item">
           <span className="notice-number">3)</span>
-          <span>테이블 자리비움은 10분까지 입니다.<br />초과 시 안내 없이 테이블 정리할 예정이오니 자리비움에 유의해 주시기 바랍니다.</span>
+          <span>테이블 자리비움은 10분까지 입니다. 초과 시 안내 없이 테이블 정리할 예정이오니<br />자리비움에 유의해 주시기 바랍니다.</span>
         </div>
         <div className="notice-item">
           <span className="notice-number">4)</span>
