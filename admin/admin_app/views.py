@@ -48,16 +48,16 @@ def admin_logout(request):
 def dashboard(request):
     """대시보드 메인 페이지"""
     # 통계 데이터 수집
-    total_orders = OrderModel.objects.filter(is_visible=True).count()
+    total_orders = OrderModel.objects.exclude(status='pre_order').count()
     total_foods = FoodModel.objects.count()
     total_tables = TableModel.objects.count()
     
     # 오늘 주문 수
     today = timezone.now().date()
-    today_orders = OrderModel.objects.filter(order_date__date=today, is_visible=True).count()
+    today_orders = OrderModel.objects.filter(order_date__date=today).exclude(status='pre_order').count()
     
-    # 총 매출 (visible한 주문만)
-    total_revenue = OrderModel.objects.filter(is_visible=True).aggregate(
+    # 총 매출 (pre-order 제외)
+    total_revenue = OrderModel.objects.exclude(status='pre_order').aggregate(
         revenue=Sum('pre_order_amount')
     )['revenue'] or 0
     
@@ -68,7 +68,7 @@ def dashboard(request):
     
     # 인기 메뉴 5개
     popular_foods = FoodModel.objects.annotate(
-        order_count=Count('orderitemmodel__order', filter=Q(orderitemmodel__order__is_visible=True))
+        order_count=Count('orderitemmodel__order', filter=~Q(orderitemmodel__order__status='pre_order'))
     ).order_by('-order_count')[:5]
     
     # 품절된 메뉴 수
@@ -362,9 +362,9 @@ def api_stats(request):
     today = timezone.now().date()
     
     stats = {
-        'total_orders': OrderModel.objects.filter(is_visible=True).count(),
-        'today_orders': OrderModel.objects.filter(order_date__date=today, is_visible=True).count(),
-        'total_revenue': OrderModel.objects.filter(is_visible=True).aggregate(
+        'total_orders': OrderModel.objects.exclude(status='pre_order').count(),
+        'today_orders': OrderModel.objects.filter(order_date__date=today).exclude(status='pre_order').count(),
+        'total_revenue': OrderModel.objects.exclude(status='pre_order').aggregate(
             Sum('pre_order_amount'))['pre_order_amount__sum'] or 0,
         'active_tables': TableModel.objects.count(),
         'sold_out_foods': FoodModel.objects.filter(sold_out=True).count(),
