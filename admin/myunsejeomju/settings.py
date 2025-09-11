@@ -127,3 +127,5 @@ if DEBUG:
     # 개발 환경에서 CSRF 체크 완화
     CSRF_COOKIE_SECURE = False
     CSRF_COOKIE_SAMESITE = 'Lax'
+
+DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL')

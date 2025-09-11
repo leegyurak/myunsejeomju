@@ -8,6 +8,7 @@ from django.db.models import Q, Sum, Count
 from django.utils import timezone
 from datetime import timedelta
 
+from .discord import DiscordNotificationService
 from .models import (
     FoodModel, TableModel, OrderModel,
     PaymentDepositModel
@@ -281,6 +282,7 @@ def order_complete(request, order_id):
     """Pre-order를 Completed로 변경"""
     order = get_object_or_404(OrderModel, pk=order_id)
     table = order.table
+    discord = DiscordNotificationService()
     
     if request.method == 'POST':
         if order.status == 'pre_order':
@@ -289,6 +291,7 @@ def order_complete(request, order_id):
             
             order_info = f"{str(order.id)[:8]}... (테이블: {table.name or str(table.id)[:8]}...)"
             messages.success(request, f'주문 {order_info}이(가) 완료 처리되었습니다.')
+            discord.send_payment_completion_notification(order.id, order.payer_name, order.pre_order_amount, table.name, [{'name': item.food.name, 'quantity': item.quantity, 'price': item.price} for item in order.items.all()])
         else:
             messages.warning(request, '이미 완료된 주문이거나 선주문이 아닙니다.')
         
