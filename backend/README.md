@@ -210,7 +210,7 @@ Content-Type: application/json
 ```json
 {
   "order_id": "789e0123-e45b-67c8-d901-234567890123",
-  "redirect_url": "supertoss://send?amount=15000&bank=%EC%BC%80%EC%9D%B4%EB%B1%85%ED%81%AC&accountNo=100148347666&origin=qr",
+  "redirect_url": "supertoss://send?amount=&bank=&accountNo=&origin=qr",
   "message": "선주문이 성공적으로 생성되었습니다. 결제 URL로 리다이렉트 해주세요."
 }
 ```

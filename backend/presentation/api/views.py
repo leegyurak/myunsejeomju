@@ -1,7 +1,7 @@
+from django.conf import settings
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from django.http import HttpResponseRedirect
 from urllib.parse import quote
 
 from domain.use_cases.food_use_cases import GetAllFoodsUseCase, GetFoodByIdUseCase, GetFoodsByCategoryUseCase
@@ -244,7 +244,7 @@ def create_pre_order(request, table_id):
         order = create_pre_order_use_case.execute(table_id, payer_name, total_amount, items_data)
         
         # SuperToss 결제 URL 생성
-        supertoss_url = f"supertoss://send?amount={total_amount}&bank=%EC%BC%80%EC%9D%B4%EB%B1%85%ED%81%AC&accountNo=100148347666&origin=qr"
+        supertoss_url = f"supertoss://send?amount={total_amount}&bank={quote(settings.BANK_NAME)}&accountNo={settings.BANK_ACCOUNT_NO}&origin=qr"
         
         return Response({
             'order_id': order.id,
