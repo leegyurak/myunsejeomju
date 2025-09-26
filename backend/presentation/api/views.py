@@ -277,8 +277,11 @@ def payment_webhook(request):
     try:
         # 헤더 검증 (선택적으로 추가 가능)
         webhook_key = request.headers.get('x-webhook-key')
-        mall_id = request.headers.get('x-mall-id')
-        trace_id = request.headers.get('x-trace-id')
+        if webhook_key != settings.PAYACTION_WEBHOOK_KEY:
+            return Response(
+                {'status': 'error', 'message': 'Invalid webhook key'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         if not request.data:
             return Response(
