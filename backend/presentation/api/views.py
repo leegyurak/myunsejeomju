@@ -289,15 +289,10 @@ def payment_webhook(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # 입금 확인 시에만 처리 (transaction_type이 'deposited'인 경우)
-        transaction_type = request.data.get('transaction_type')
-        if transaction_type != 'deposited':
-            return Response({'status': 'success'}, status=status.HTTP_200_OK)
-        
         # 웹훅 데이터에서 필요한 정보 추출
         transaction_name = request.data.get('transaction_name')
         bank_account_number = request.data.get('bank_account_number')
-        amount = request.data.get('amount')
+        amount = request.data.get('amount') if request.data.get('transaction_type') == 'deposited' else request.data.get('amount') * -1
         bank_code = request.data.get('bank_code')
         bank_account_id = request.data.get('bank_account_id')
         transaction_date = request.data.get('transaction_date')
