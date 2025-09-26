@@ -58,7 +58,7 @@ const PaymentConfirmationWindow: React.FC<PaymentConfirmationWindowProps> = ({
         
         // If payment method is KakaoPay, use KakaoPay link
         if (paymentMethod === 'kakaopay') {
-          const kakaoPayUrl = 'https://link.kakaopay.com/t/money/to/bank?bank_code=089&bank_account_number=100148347666';
+          const kakaoPayUrl = 'https://link.kakaopay.com/t/money/to/bank?bank_code=020&bank_account_number=1002665818418';
           console.log('KakaoPay payment detected, using URL:', kakaoPayUrl);
           setRedirectUrl(kakaoPayUrl);
           
