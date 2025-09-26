@@ -129,7 +129,7 @@ class PaymentDepositModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name='입금 ID')
     transaction_name = models.CharField(max_length=100, verbose_name='입금자 이름')
     bank_account_number = models.CharField(max_length=50, verbose_name='계좌번호')
-    amount = models.PositiveIntegerField(verbose_name='입금 금액')
+    amount = models.IntegerField(verbose_name='입금 금액')
     bank_code = models.CharField(max_length=10, verbose_name='은행 코드')
     bank_account_id = models.CharField(max_length=255, verbose_name='은행 계좌 ID')
     transaction_date = models.DateTimeField(verbose_name='거래 일시')
